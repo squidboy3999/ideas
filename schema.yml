@@ -1,0 +1,136 @@
+# schema.yml - Designed for comprehensive testing of action templates
+
+database_name: test_database
+
+tables:
+  - name: users
+    columns:
+      - name: user_id
+        data_type: INT
+        description: Primary key for users.
+        metadata:
+          - id
+      - name: username
+        data_type: VARCHAR(50)
+        description: Unique username.
+        metadata:
+          - searchable
+      - name: email
+        data_type: TEXT
+        description: User's email address. Not directly searchable by pattern usually.
+        metadata: [] # No specific metadata, should support basic string ops
+      - name: registration_date
+        data_type: DATE
+        description: Date user registered.
+        metadata: []
+      - name: last_login
+        data_type: TIMESTAMP
+        description: Timestamp of last login.
+        metadata: []
+      - name: is_active
+        data_type: BOOLEAN
+        description: Flag indicating if user is active.
+        metadata:
+          - flag
+      - name: monthly_spend
+        data_type: DECIMAL(10, 2)
+        description: Average monthly spending.
+        metadata:
+          - monetary
+      - name: age
+        data_type: INT
+        description: Age of the user.
+        metadata: []
+
+  - name: products
+    columns:
+      - name: product_id
+        data_type: INT
+        description: Unique identifier for products.
+        metadata:
+          - id
+      - name: product_name
+        data_type: VARCHAR(255)
+        description: Name of the product.
+        metadata:
+          - searchable
+      - name: description
+        data_type: TEXT
+        description: Detailed product description.
+        metadata:
+          - searchable # Can be searched by LIKE
+      - name: price
+        data_type: DECIMAL(10, 2)
+        description: Price of the product.
+        metadata:
+          - monetary
+      - name: stock_quantity
+        data_type: INT
+        description: Current stock level.
+        metadata: []
+      - name: release_date
+        data_type: DATE
+        description: Date the product was released.
+        metadata: []
+
+  - name: locations_data
+    columns:
+      - name: loc_id
+        data_type: INT
+        description: Unique location identifier.
+        metadata:
+          - id
+      - name: loc_name
+        data_type: VARCHAR(100)
+        description: Name of the location.
+        metadata:
+          - searchable
+      - name: latitude_coord
+        data_type: DECIMAL(9, 6)
+        description: Latitude coordinate.
+        metadata:
+          - latitude
+      - name: longitude_coord
+        data_type: DECIMAL(9, 6)
+        description: Longitude coordinate.
+        metadata:
+          - longitude
+      - name: geom_point_4326
+        data_type: GEOMETRY(POINT, 4326)
+        description: Point geometry in WGS 84.
+        metadata:
+          - spatial_point
+      - name: geom_line_4326
+        data_type: GEOMETRY(LINESTRING, 4326)
+        description: LineString geometry in WGS 84 (e.g., a path).
+        metadata:
+          - spatial_line
+      - name: geom_polygon_4326
+        data_type: GEOMETRY(POLYGON, 4326)
+        description: Polygon geometry in WGS 84 (e.g., a service area).
+        metadata:
+          - spatial_polygon
+      - name: geom_point_26918
+        data_type: GEOMETRY(POINT, 26918) # UTM Zone 18N (example for different SRID)
+        description: Point geometry in UTM Zone 18N.
+        metadata:
+          - spatial_point
+      - name: geog_point_4326
+        data_type: GEOGRAPHY(POINT, 4326)
+        description: Geography point (for accurate global distance).
+        metadata:
+          - spatial_point
+      - name: geog_polygon_4326
+        data_type: GEOGRAPHY(POLYGON, 4326)
+        description: Geography polygon.
+        metadata:
+          - spatial_polygon
+      - name: region_code
+        data_type: VARCHAR(10)
+        description: Code for the geographical region.
+        metadata: [] # Should work with IN, Equality
+      - name: is_urban
+        data_type: BOOLEAN
+        description: Whether the location is urban.
+        metadata:
+          - flag
