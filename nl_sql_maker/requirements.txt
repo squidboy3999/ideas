@@ -1,0 +1,10 @@
+# Core dependencies
+lark
+PyYAML
+Shapely
+
+# Database dependencies
+sqlalchemy
+pysqlite3
+
+inflect

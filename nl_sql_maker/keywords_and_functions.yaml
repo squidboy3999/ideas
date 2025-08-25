@@ -1,0 +1,348 @@
+keywords:
+  select_verbs:
+    # "select" is the canonical term for the grammar.
+    # All words in the list are aliases that the Normalizer will map to "select".
+    select:
+      aliases:
+        - show
+        - list
+        - what
+        - get
+        - display
+        - find
+        - retrieve
+        - fetch
+        - tell me
+        - give me
+  prepositions:
+    # For keywords, the canonical name is the word itself.
+    of:
+      aliases: ["of"]
+    from:
+      aliases: ["from"]
+    _on:
+      aliases: ["on"]
+    at:
+      aliases: ["at"]
+    belonging to:
+      aliases: ["belonging to"]
+  logical_operators:
+    # The keys (and, or, not) are the canonical terms.
+    and:
+      aliases: ["and", "&&"]
+      template: "{clause1} AND {clause2}"
+    or:
+      aliases: ["or", "||"]
+      template: "{clause1} OR {clause2}"
+    not:
+      aliases: ["not", "!"]
+      template: "NOT {clause}"
+  comparison_operators:
+    equal:
+      aliases: ["is", "equals", equal to, '=', '==', is exactly, exactly, is the same as]
+      template: "{column} = {value}"
+      applicable_types: {'column': [any], 'value': [any]}
+      label_rules: []
+      explanation: "Tests for equality between two values."
+    not_equal:
+      aliases: ["is not", '!=', '<>', is not equal to, does not equal, isn't]
+      template: "{column} != {value}"
+      applicable_types: {'column': [any], 'value': [any]}
+      label_rules: []
+      explanation: "Tests for inequality between two values."
+    greater_than:
+      aliases: [is greater than, '>', more than, over, above, exceeds]
+      template: "{column} > {value}"
+      applicable_types: {'column': [numeric, date, timestamp], 'value': [numeric, date, timestamp]}
+      label_rules: []
+      explanation: "Tests if the first value is greater than the second."
+    less_than:
+      aliases: [is less than, '<', smaller than, under, below]
+      template: "{column} < {value}"
+      applicable_types: {'column': [numeric, date, timestamp], 'value': [numeric, date, timestamp]}
+      label_rules: []
+      explanation: "Tests if the first value is less than the second."
+    greater_than_or_equal:
+      aliases: [is greater than or equal to, '>=', at least, is at least, not less than]
+      template: "{column} >= {value}"
+      applicable_types: {'column': [numeric, date, timestamp], 'value': [numeric, date, timestamp]}
+      label_rules: []
+      explanation: "Tests if the first value is greater than or equal to the second."
+    less_than_or_equal:
+      aliases: [is less than or equal to, '<=', at most, is at most, not more than, up to]
+      template: "{column} <= {value}"
+      applicable_types: {'column': [numeric, date, timestamp], 'value': [numeric, date, timestamp]}
+      label_rules: []
+      explanation: "Tests if the first value is less than or equal to the second."
+    between:
+      aliases: [between, is between, in the range of]
+      template: "{column} BETWEEN {value1} AND {value2}"
+      pattern: ["{value1}", "and", "{value2}"]
+      applicable_types: {'column': [numeric, date, timestamp], 'value1': [numeric, date, timestamp], 'value2': [numeric, date, timestamp]}
+      label_rules: []
+      explanation: "Tests if a value falls within a specified range."
+    in:
+      aliases: ["in", is in, is one of, one of]
+      template: "{column} IN ({values})"
+      applicable_types: {'column': [any], 'values': [any]}
+      label_rules: []
+      explanation: "Tests if a value is present in a given list of values."
+    like:
+      aliases: [like, matches, starts with, ends with]
+      template: "{column} LIKE {value}"
+      applicable_types: {'column': [text], 'value': [text]}
+      label_rules: []
+      explanation: "Performs a pattern matching search using wildcards."
+    is_null:
+      aliases: [is null, is empty, has no value, is missing]
+      template: "{column} IS NULL"
+      applicable_types: {'column': [any]}
+      label_rules: []
+      explanation: "Tests if a column's value is NULL."
+    is_not_null:
+      aliases: [is not null, is not empty, has a value, exists, is present]
+      template: "{column} IS NOT NULL"
+      applicable_types: {'column': [any]}
+      label_rules: []
+      explanation: "Tests if a column's value is not NULL."
+  filler_words:
+    _skip:
+      aliases:
+        - me
+        - the
+        - all
+        - for
+        - are
+        - a
+        - an
+        - some
+        - any
+        - their
+        - with
+        - that
+        - which
+        - who
+  global_templates:
+    select_template: "SELECT {columns} FROM {table} {constraints}"
+
+# SQL functions and templates
+sql_actions:
+  count:
+    aliases: [count, number, number of, how many, quantity of, total number of]
+    template: "COUNT({column})"
+    applicable_types: {'column': [any]}
+    label_rules: ['not id']
+    explanation: "Returns the number of rows that match a specified criterion."
+  sum:
+    aliases: [sum, total, sum of, total of, total amount of, aggregate]
+    template: "SUM({column})"
+    applicable_types: {'column': [numeric]}
+    label_rules: ['not id']
+    explanation: "Returns the sum of all values in a numeric column."
+  avg:
+    aliases: [average, average of, avg, mean]
+    template: "AVG({column})"
+    applicable_types: {'column': [numeric]}
+    label_rules: ['not id']
+    explanation: "Returns the average of all values in a numeric column."
+  min:
+    aliases: [minimum, least, min, smallest, lowest, bottom]
+    template: "MIN({column})"
+    applicable_types: {'column': [numeric, text, date, timestamp]}
+    label_rules: []
+    explanation: "Returns the minimum value of a column."
+  max:
+    aliases: [maximum, most, max, largest, highest, greatest]
+    template: "MAX({column})"
+    applicable_types: {'column': [numeric, text, date, timestamp]}
+    label_rules: []
+    explanation: "Returns the maximum value of a column."
+  distinct:
+    aliases: [distinct, unique, unique values of]
+    template: "DISTINCT {column}"
+    applicable_types: {'column': [any]}
+    label_rules: ['not id']
+    explanation: "Returns only the unique values in a column."
+  order_by_asc:
+    aliases: [order by ascending, sort by ascending, sort by, order by, in ascending order]
+    template: "ORDER BY {column} ASC"
+    applicable_types: {'column': [any]}
+    label_rules: []
+    explanation: "Sorts the results in ascending order based on a column."
+  order_by_desc:
+    aliases: [order by descending, sort by descending, in descending order]
+    template: "ORDER BY {column} DESC"
+    applicable_types: {'column': [any]}
+    label_rules: []
+    explanation: "Sorts the results in descending order based on a column."
+  group_by:
+    aliases: [group by, grouped by]
+    template: "GROUP BY {column}"
+    applicable_types: {'column': [any]}
+    label_rules: []
+    explanation: "Groups rows that have the same values into summary rows."
+  having:
+    aliases: [having, with]
+    template: "HAVING {condition}"
+    applicable_types: {'condition': [any]}
+    label_rules: []
+    explanation: "Filters groups based on a condition."
+  limit:
+    aliases: [limit, top, first, only]
+    template: "LIMIT {value}"
+    applicable_types: {'value': [numeric]}
+    label_rules: []
+    explanation: "Restricts the number of rows returned by the query."
+  extract:
+    aliases: [extract, get the]
+    template: "EXTRACT({part} FROM {column})"
+    pattern: ["{part}", "from", "{column}"]
+    applicable_types: {'part': [any], 'column': [date, timestamp]}
+    label_rules: []
+    explanation: "Extracts a specific part (e.g., year, month) from a date or time value."
+  length:
+    aliases: [length in, length of, character count, string length]
+    template: "LENGTH({column})"
+    applicable_types: {'column': [text]}
+    label_rules: []
+    explanation: "Returns the length of a string."
+  concat:
+    aliases: [concat, concatenate, join, combine]
+    template: "CONCAT({column1}, {column2})"
+    pattern: ["{column1}", "and", "{column2}"]
+    applicable_types: {'column1': [text], 'column2': [text]}
+    label_rules: []
+    explanation: "Joins two or more strings together."
+  cast:
+    aliases: [cast, convert, change type]
+    template: "CAST({column} AS {to_type})"
+    pattern: ["{column}", "to", "{to_type}"]
+    applicable_types: {'column': [any], 'to_type': [any]}
+    label_rules: []
+    explanation: "Converts a value from one data type to another."
+postgis_actions:
+  st_perimeter:
+    aliases: [perimeter, boundary length, outline length, length of boundary]
+    template: "ST_Perimeter({geom})"
+    applicable_types: {'geom': [geometry_polygon, geography_polygon]}
+    label_rules: ['postgis']
+    explanation: "Returns the perimeter (boundary length) of a polygonal geometry."
+  st_distance:
+    aliases: [distance, how far, distance between, separation of]
+    template: "ST_Distance({geom1}, {geom2})"
+    pattern: ["of", "{geom1}", "from", "{geom2}"]
+    applicable_types: {'geom1': [geometry_point, geography_point, geometry_linestring, geography_linestring, geometry_polygon, geography_polygon], 'geom2': [geometry_point, geography_point, geometry_linestring, geography_linestring, geometry_polygon, geography_polygon]}
+    label_rules: ['postgis']
+    explanation: "Calculates the shortest distance between two geometries or geographies."
+  st_intersects:
+    aliases: [intersects, overlaps with]
+    template: "ST_Intersects({geom1}, {geom2})"
+    pattern: ["{geom1}", "with", "{geom2}"]
+    applicable_types: {'geom1': [geometry, geography, geometry_point, geometry_linestring, geometry_polygon], 'geom2': [geometry, geography, geometry_point, geometry_linestring, geometry_polygon]}
+    label_rules: ['postgis']
+    explanation: "Tests if two geometries or geographies intersect."
+  st_area:
+    aliases: [area, area of, size of, surface area]
+    template: "ST_Area({geom})"
+    applicable_types: {'geom': [geometry_polygon, geography_polygon]}
+    label_rules: ['postgis']
+    explanation: "Calculates the area of a polygonal geometry."
+  st_length:
+    aliases: [length along, length of, distance along, distance of, path length, line length]
+    template: "ST_Length({geom})"
+    applicable_types: {'geom': [geometry_linestring, geography_linestring]}
+    label_rules: ['postgis']
+    explanation: "Calculates the length of a linestring geometry."
+  st_x:
+    aliases: [x coordinate, longitude, lon, x pos]
+    template: "ST_X({point})"
+    applicable_types: {'point': [geometry_point, geography_point]}
+    label_rules: ['postgis']
+    explanation: "Returns the X coordinate of a point geometry."
+  st_y:
+    aliases: [y coordinate, latitude, lat, y pos]
+    template: "ST_Y({point})"
+    applicable_types: {'point': [geometry_point, geography_point]}
+    label_rules: ['postgis']
+    explanation: "Returns the Y coordinate of a point geometry."
+  st_within:
+    aliases: [within, inside, is inside, is within, contained in]
+    template: "ST_Within({geom1}, {geom2})"
+    pattern: ["{geom1}", "in", "{geom2}"]
+    applicable_types: {'geom1': [geometry, geography, geometry_point, geometry_linestring, geometry_polygon], 'geom2': [geometry, geography, geometry_point, geometry_linestring, geometry_polygon]}
+    label_rules: ['postgis']
+    explanation: "Tests if a geometry is entirely contained within another."
+  st_contains:
+    aliases: [contains, encloses, surrounds]
+    template: "ST_Contains({geom1}, {geom2})"
+    pattern: ["{geom1}", "and", "{geom2}"]
+    applicable_types: {'geom1': [geometry, geography, geometry_polygon], 'geom2': [geometry, geography, geometry_point, geometry_linestring, geometry_polygon]}
+    label_rules: ['postgis']
+    explanation: "Tests if a geometry contains another geometry entirely."
+  st_geometrytype:
+    aliases: [geometry type, type of geometry, shape type, what kind of shape]
+    template: "ST_GeometryType({geom})"
+    applicable_types: {'geom': [geometry, geography, geometry_point, geometry_linestring, geometry_polygon]}
+    label_rules: ['postgis']
+    explanation: "Returns the type of a geometry as a string."
+  st_buffer:
+    aliases: [buffer, buffer around, area around, expand by]
+    template: "ST_Buffer({geom}, {radius})"
+    pattern: ["{geom}", "by", "{radius}"]
+    applicable_types: {'geom': [geometry, geography, geometry_point, geometry_linestring, geometry_polygon], 'radius': [numeric]}
+    label_rules: ['postgis']
+    explanation: "Creates a polygon that surrounds a geometry at a specified distance."
+  st_union:
+    aliases: [union, combine, merge, union of]
+    template: "ST_Union({geom_collection})"
+    applicable_types: {'geom_collection': [geometry, geography, geometry_point, geometry_linestring, geometry_polygon]}
+    label_rules: ['postgis']
+    explanation: "Merges multiple geometries into a single geometry."
+  st_centroid:
+    aliases: [centroid, center, center point, geometric center]
+    template: "ST_Centroid({geom})"
+    applicable_types: {'geom': [geometry, geography, geometry_point, geometry_linestring, geometry_polygon]}
+    label_rules: ['postgis']
+    explanation: "Returns the geometric center of a geometry."
+  st_simplify:
+    aliases: [simplify, simplify shape, generalize]
+    template: "ST_Simplify({geom}, {tolerance})"
+    pattern: ["{geom}", "by", "{tolerance}"]
+    applicable_types: {'geom': [geometry_linestring, geometry_polygon, geography_linestring, geography_polygon], 'tolerance': [numeric]}
+    label_rules: ['postgis']
+    explanation: "Simplifies a geometry by reducing the number of vertices."
+  st_touches:
+    aliases: [touches, borders, is adjacent to]
+    template: "ST_Touches({geom1}, {geom2})"
+    pattern: ["{geom1}", "and", "{geom2}"]
+    applicable_types: {'geom1': [geometry, geography, geometry_point, geometry_linestring, geometry_polygon], 'geom2': [geometry, geography, geometry_point, geometry_linestring, geometry_polygon]}
+    label_rules: ['postgis']
+    explanation: "Tests if two geometries touch only at their boundaries."
+  st_crosses:
+    aliases: [crosses, goes across]
+    template: "ST_Crosses({geom1}, {geom2})"
+    pattern: ["{geom1}", "and", "{geom2}"]
+    applicable_types: {'geom1': [geometry, geography, geometry_linestring, geometry_polygon], 'geom2': [geometry, geography, geometry_linestring]}
+    label_rules: ['postgis']
+    explanation: "Tests if two geometries cross each other."
+  st_spatial_index:
+    aliases: [spatial index]
+    template: "{geom1} && {geom2}"
+    pattern: ["{geom1}", "with", "{geom2}"]
+    applicable_types: {'geom1': [geometry, geography, geometry_point, geometry_linestring, geometry_polygon], 'geom2': [geometry, geography, geometry_point, geometry_linestring, geometry_polygon]}
+    label_rules: ['postgis']
+    explanation: "A spatial index operator that checks for intersection."
+  st_distance_operator:
+    aliases: [closest, nearest, closest to]
+    template: "{geom1} <-> {geom2}"
+    pattern: ["{geom1}", "to", "{geom2}"]
+    applicable_types: {'geom1': [geometry, geography, geometry_point, geometry_linestring, geometry_polygon], 'geom2': [geometry, geography, geometry_point, geometry_linestring, geometry_polygon]}
+    label_rules: ['postgis']
+    explanation: "A spatial operator that returns the distance between two geometries."
+  st_transform:
+    aliases: [transform, reproject, convert coordinate system]
+    template: "ST_Transform({geom}, {srid})"
+    pattern: ["{geom}", "to", "{srid}"]
+    applicable_types: {'geom': [geometry, geography, geometry_point, geometry_linestring, geometry_polygon], 'srid': [numeric]}
+    label_rules: ['postgis']
+    explanation: "Transforms a geometry from one coordinate system to another."

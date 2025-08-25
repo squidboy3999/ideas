@@ -1,0 +1,91 @@
+cases:
+  - nl: "select region\_id, name from regions"
+    expect\_ok: true
+    reason: "two scalar columns from one table"
+  - nl: "select name, boundaries from regions"
+    expect\_ok: true
+    reason: "scalar + geometry column; single FROM"
+  - nl: "select boundaries from regions"
+    expect\_ok: true
+    reason: "single geometry column"
+  - nl: "select avg of region\_id from regions"
+    expect\_ok: true
+    reason: "numeric aggregate over one column"
+  - nl: "select st\_union of boundaries from regions"
+    expect\_ok: true
+    reason: "geometry aggregate over one geometry column"
+  - nl: "select st\_area of boundaries, st\_length of boundaries, and region\_id from regions"
+    expect\_ok: true
+    reason: "geometry measures plus scalar; all per-row"
+  - nl: "select boundaries, st\_distance of boundaries from regions"
+    expect\_ok: false
+    reason: "st\_distance requires two geometry arguments"
+  - nl: "select region\_id, st\_buffer of boundaries from regions"
+    expect\_ok: false
+    reason: "st\_buffer missing distance parameter"
+  - nl: "select st\_intersects of boundaries, st\_geometrytype of boundaries, name from regions"
+    expect\_ok: false
+    reason: "st\_intersects requires two geometries"
+  - nl: "select boundaries, concat of name from regions"
+    expect\_ok: false
+    reason: "concat needs 2+ arguments; only one provided"
+  - nl: "select price, product\_name, sale\_id from sales"
+    expect\_ok: true
+    reason: "three scalar columns from one table"
+  - nl: "select quantity, sale\_date, price from sales"
+    expect\_ok: true
+    reason: "numeric+date+numeric; per-row fields; single FROM"
+  - nl: "select sale\_id, sale\_date from sales"
+    expect\_ok: true
+    reason: "two scalar columns from one table"
+  - nl: "select product\_name from sales"
+    expect\_ok: true
+    reason: "single text column; simple projection"
+  - nl: "select sale\_id from sales"
+    expect\_ok: true
+    reason: "single id column; simple projection"
+  - nl: "select sale\_date from sales"
+    expect\_ok: true
+    reason: "single date column; simple projection"
+  - nl: "select sales.user\_id, sales.price from sales"
+    expect\_ok: true
+    reason: "qualified scalar columns; single FROM"
+  - nl: "select sale\_id, length of product\_name from sales"
+    expect\_ok: true
+    reason: "string length over text column; valid scalar expression"
+  - nl: "select quantity and product\_name from sales"
+    expect\_ok: true
+    reason: "'and' as list separator; two scalar columns"
+  - nl: "select price, cast of product\_name from sales"
+    expect\_ok: false
+    reason: "CAST missing target type; invalid function usage"
+  - nl: "select users.balance, and count of users.user\_id from users"
+    expect\_ok: false
+    reason: "aggregate mixed with non-aggregate; no GROUP BY"
+  - nl: "select balance, age from users"
+    expect\_ok: true
+    reason: "two scalar columns"
+  - nl: "select users.user\_id from users"
+    expect\_ok: true
+    reason: "single id column"
+  - nl: "select location, last\_login from users"
+    expect\_ok: true
+    reason: "geometry + date; simple projection"
+  - nl: "select last\_login, location, is\_active from users"
+    expect\_ok: true
+    reason: "date+geometry+boolean; simple projection"
+  - nl: "select users.user\_id, users.balance from users"
+    expect\_ok: true
+    reason: "qualified scalar columns"
+  - nl: "select st\_transform of location from users"
+    expect\_ok: false
+    reason: "st\_transform needs SRID argument"
+  - nl: "select username, st\_buffer of location from users"
+    expect\_ok: false
+    reason: "st\_buffer needs distance argument"
+  - nl: "select balance, st\_contains of location from users"
+    expect\_ok: false
+    reason: "st\_contains needs two geometries"
+  - nl: "select min of location from users"
+    expect\_ok: false
+    reason: "MIN expects numeric/comparable; geometry invalid"

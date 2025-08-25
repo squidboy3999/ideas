@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  dev:
+    image: natural-language-sql-dev:latest
+    build:
+      context: .
+      podmanfile: Containerfile
+    volumes:
+      - .:/app:Z
+    tty: true
+    stdin_open: true
+    command: /bin/bash

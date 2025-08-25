@@ -1,0 +1,4 @@
+schema_path: /app/schema.yaml
+keywords_path: /app/keywords_and_functions.yaml
+schema_sha256: 540f968d51bc8f2714c4b49120e052f6413e848ca27d24e49361a69fc8f5dc41
+keywords_sha256: 1f0714269a0414e6d3308fa84ec7a2d3586506c996858e27a9dc216514f5c9d6

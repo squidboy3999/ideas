@@ -1,0 +1,140 @@
+users:
+- account
+- accounts
+- client
+- clients
+- customer
+- customers
+- people
+- user
+- users
+user_id:
+- account number
+- client id
+- customer id
+- user id
+- user identifier
+- user ids
+- user number
+- user_id
+username:
+- account name
+- handle
+- login
+- user name
+- user names
+- username
+- usernames
+age:
+- age
+- ages
+- years old
+balance:
+- account balance
+- amount
+- balance
+- balances
+- credit
+- funds
+is_active:
+- account status
+- active status
+- is active
+- is actives
+- is_active
+- status
+last_login:
+- last access
+- last active date
+- last login
+- last logins
+- last signed in
+- last_login
+- most recent login
+location:
+- coordinates
+- geo location
+- geographic coordinates
+- location
+- locations
+- place
+- position
+sales:
+- order
+- orders
+- purchase
+- purchases
+- sale
+- sales
+- transaction
+- transactions
+sale_id:
+- order id
+- order number
+- purchase id
+- sale id
+- sale ids
+- sale_id
+- transaction id
+product_name:
+- item
+- item name
+- item sold
+- product
+- product name
+- product names
+- product_name
+sale_date:
+- order date
+- purchase date
+- sale date
+- sale dates
+- sale_date
+- transaction date
+- when it was sold
+quantity:
+- amount sold
+- item count
+- number of items
+- number sold
+- quantities
+- quantity
+price:
+- amount
+- charge
+- cost
+- how much
+- price
+- prices
+- value
+regions:
+- area
+- areas
+- district
+- region
+- regions
+- territory
+- zone
+- zones
+region_id:
+- area id
+- region id
+- region ids
+- region number
+- region_id
+- zone id
+name:
+- identifier
+- label
+- name
+- names
+- title
+boundaries:
+- area shape
+- border
+- boundaries
+- boundary
+- geometry
+- outline
+- perimeter
+- shape

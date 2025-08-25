@@ -1,0 +1,393 @@
+run_epoch: 1756066206
+inputs:
+  schema_hash: 2c3824c968f2af2af86aa02dcdda5d19d0cf7729282bd2918b1d155c34953e7a
+  keywords_hash: f8f36ed37c92d5a2d1d084193fb12e460570ac0fe0ce6f5b40a4a749489b95fe
+graph_hash: d8ac3853096fdd797a00ada4e86987618d11125e343afe785ab12181463882a2
+artifact_hashes:
+  vocabulary: 363ebee4eaa5581b6a7ee3cb2dc29adc38e1ad4fd0f7822f8195b70246dd040c
+  binder: 32d776992e646f29cc3d1f0499de986a2c784ac296aba72f0756b2545946a780
+  grammar_text: 308f1882eea521fcdc3d78eb2e408765c72a42d94fffab8daef6c8da39ecff31
+combined_cache_token: cfa8b0deaea119e260eb3bea6b35976c08a69bbbe33ee389aeca22874f7be93f
+node_index:
+  users:
+    entity_type: table
+    columns:
+    - users.age
+    - users.balance
+    - users.is_active
+    - users.last_login
+    - users.location
+    - users.user_id
+    - users.username
+  users.user_id:
+    entity_type: column
+    table: users
+    type: int
+    labels:
+    - id
+  users.username:
+    entity_type: column
+    table: users
+    type: text
+    labels: []
+  users.age:
+    entity_type: column
+    table: users
+    type: int
+    labels: []
+  users.balance:
+    entity_type: column
+    table: users
+    type: float
+    labels: []
+  users.is_active:
+    entity_type: column
+    table: users
+    type: bool
+    labels:
+    - boolean_like
+  users.last_login:
+    entity_type: column
+    table: users
+    type: datetime
+    labels: []
+  users.location:
+    entity_type: column
+    table: users
+    type: int
+    labels:
+    - postgis
+  sales:
+    entity_type: table
+    columns:
+    - sales.price
+    - sales.product_name
+    - sales.quantity
+    - sales.sale_date
+    - sales.sale_id
+    - sales.user_id
+  sales.sale_id:
+    entity_type: column
+    table: sales
+    type: int
+    labels:
+    - id
+  sales.user_id:
+    entity_type: column
+    table: sales
+    type: int
+    labels:
+    - id
+  sales.product_name:
+    entity_type: column
+    table: sales
+    type: text
+    labels: []
+  sales.sale_date:
+    entity_type: column
+    table: sales
+    type: date
+    labels:
+    - date
+  sales.quantity:
+    entity_type: column
+    table: sales
+    type: int
+    labels: []
+  sales.price:
+    entity_type: column
+    table: sales
+    type: float
+    labels: []
+  regions:
+    entity_type: table
+    columns:
+    - regions.boundaries
+    - regions.name
+    - regions.region_id
+  regions.region_id:
+    entity_type: column
+    table: regions
+    type: int
+    labels:
+    - id
+    - low_cardinality
+  regions.name:
+    entity_type: column
+    table: regions
+    type: text
+    labels: []
+  regions.boundaries:
+    entity_type: column
+    table: regions
+    type: geometry
+    labels:
+    - postgis
+  count:
+    entity_type: sql_actions
+    class: aggregate
+    args:
+    - column
+  sum:
+    entity_type: sql_actions
+    class: aggregate
+    args:
+    - column
+  avg:
+    entity_type: sql_actions
+    class: aggregate
+    args:
+    - column
+  min:
+    entity_type: sql_actions
+    class: aggregate
+    args:
+    - column
+  max:
+    entity_type: sql_actions
+    class: aggregate
+    args:
+    - column
+  distinct:
+    entity_type: sql_actions
+    class: scalar
+    args:
+    - column
+  order_by_asc:
+    entity_type: sql_actions
+    class: ordering
+    args:
+    - column
+  order_by_desc:
+    entity_type: sql_actions
+    class: ordering
+    args:
+    - column
+  group_by:
+    entity_type: sql_actions
+    class: scalar
+    args:
+    - column
+  having:
+    entity_type: sql_actions
+    class: scalar
+    args:
+    - column
+  limit:
+    entity_type: sql_actions
+    class: scalar
+    args:
+    - column
+  extract:
+    entity_type: sql_actions
+    class: scalar
+    args:
+    - column
+  length:
+    entity_type: sql_actions
+    class: scalar
+    args:
+    - column
+  concat:
+    entity_type: sql_actions
+    class: scalar
+    args:
+    - column
+  cast:
+    entity_type: sql_actions
+    class: scalar
+    args:
+    - column
+  st_perimeter:
+    entity_type: sql_actions
+    class: spatial
+    args:
+    - column
+  st_distance:
+    entity_type: sql_actions
+    class: spatial
+    args:
+    - column
+  st_intersects:
+    entity_type: sql_actions
+    class: spatial
+    args:
+    - column
+  st_area:
+    entity_type: sql_actions
+    class: spatial
+    args:
+    - column
+  st_length:
+    entity_type: sql_actions
+    class: spatial
+    args:
+    - column
+  st_x:
+    entity_type: sql_actions
+    class: spatial
+    args:
+    - column
+  st_y:
+    entity_type: sql_actions
+    class: spatial
+    args:
+    - column
+  st_within:
+    entity_type: sql_actions
+    class: spatial
+    args:
+    - column
+  st_contains:
+    entity_type: sql_actions
+    class: spatial
+    args:
+    - column
+  st_geometrytype:
+    entity_type: sql_actions
+    class: spatial
+    args:
+    - column
+  st_buffer:
+    entity_type: sql_actions
+    class: spatial
+    args:
+    - column
+  st_union:
+    entity_type: sql_actions
+    class: spatial
+    args:
+    - column
+  st_centroid:
+    entity_type: sql_actions
+    class: spatial
+    args:
+    - column
+  st_simplify:
+    entity_type: sql_actions
+    class: spatial
+    args:
+    - column
+  st_touches:
+    entity_type: sql_actions
+    class: spatial
+    args:
+    - column
+  st_crosses:
+    entity_type: sql_actions
+    class: spatial
+    args:
+    - column
+  st_spatial_index:
+    entity_type: sql_actions
+    class: scalar
+    args:
+    - column
+  st_distance_operator:
+    entity_type: sql_actions
+    class: scalar
+    args:
+    - column
+  st_transform:
+    entity_type: sql_actions
+    class: spatial
+    args:
+    - column
+  equal:
+    entity_type: comparison_operators
+  not_equal:
+    entity_type: comparison_operators
+  greater_than:
+    entity_type: comparison_operators
+  less_than:
+    entity_type: comparison_operators
+  greater_than_or_equal:
+    entity_type: comparison_operators
+  less_than_or_equal:
+    entity_type: comparison_operators
+  between:
+    entity_type: comparison_operators
+  in:
+    entity_type: comparison_operators
+  like:
+    entity_type: comparison_operators
+  is_null:
+    entity_type: comparison_operators
+  is_not_null:
+    entity_type: comparison_operators
+  _skip:
+    entity_type: filler_words
+  a:
+    entity_type: filler_words
+  all:
+    entity_type: filler_words
+  an:
+    entity_type: filler_words
+  any:
+    entity_type: filler_words
+  are:
+    entity_type: filler_words
+  for:
+    entity_type: filler_words
+  me:
+    entity_type: filler_words
+  some:
+    entity_type: filler_words
+  that:
+    entity_type: filler_words
+  the:
+    entity_type: filler_words
+  their:
+    entity_type: filler_words
+  which:
+    entity_type: filler_words
+  who:
+    entity_type: filler_words
+  with:
+    entity_type: filler_words
+  of:
+    entity_type: prepositions
+  from:
+    entity_type: prepositions
+  _on:
+    entity_type: prepositions
+  'on':
+    entity_type: prepositions
+  at:
+    entity_type: prepositions
+  belonging to:
+    entity_type: prepositions
+  and:
+    entity_type: logical_operators
+  '&&':
+    entity_type: logical_operators
+  or:
+    entity_type: logical_operators
+  '||':
+    entity_type: logical_operators
+  not:
+    entity_type: logical_operators
+  '!':
+    entity_type: logical_operators
+  select:
+    entity_type: select_verbs
+  display:
+    entity_type: select_verbs
+  fetch:
+    entity_type: select_verbs
+  find:
+    entity_type: select_verbs
+  get:
+    entity_type: select_verbs
+  give me:
+    entity_type: select_verbs
+  list:
+    entity_type: select_verbs
+  retrieve:
+    entity_type: select_verbs
+  show:
+    entity_type: select_verbs
+  tell me:
+    entity_type: select_verbs
+  what:
+    entity_type: select_verbs

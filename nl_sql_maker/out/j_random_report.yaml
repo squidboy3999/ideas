@@ -1,0 +1,70 @@
+ok: true
+success_rate: 0.94
+successes: 94
+failures: 6
+categories:
+  binder_fail: 5
+  parser_fail: 1
+samples:
+- canonical: select st_within, st_touches of users.location, and users.last_login
+    from users
+  messy: select st_within, st_touches of users.location, and users.last_login from
+    users
+  stats:
+    input: select st_within, st_touches of users.location, and users.last_login from
+      users
+    normalizer_candidates: 1
+    bound_candidates: 0
+    parsed_candidates: 0
+    fail_category: binder_fail
+    binder_errors:
+    - incompatible arg 'users.last_login' for function 'st_touches'
+    parse_errors: []
+    picked: null
+    binder_debug: []
+    sanitized_diffs: 1
+- canonical: select st_centroid of regions.boundaries, regions.name, and regions.name
+    from regions
+  messy: select st_centroid of regions.boundaries, regions.name, and regions.name
+    from regions
+  stats:
+    input: select st_centroid of regions.boundaries, regions.name, and regions.name
+      from regions
+    normalizer_candidates: 1
+    bound_candidates: 0
+    parsed_candidates: 0
+    fail_category: binder_fail
+    binder_errors:
+    - incompatible arg 'regions.name' for function 'st_centroid'
+    parse_errors: []
+    picked: null
+    binder_debug: []
+    sanitized_diffs: 1
+- canonical: select users.age, max of users.username, and st_length of users.location
+    from users
+  messy: select users.age, max of users.username, and st_length of users.location
+    from users
+  stats:
+    input: select users.age, max of users.username, and st_length of users.location
+      from users
+    normalizer_candidates: 1
+    bound_candidates: 1
+    parsed_candidates: 0
+    fail_category: parser_fail
+    binder_errors: []
+    parse_errors:
+    - "No terminal matches 's' in the current parser context, at line 1 col 48\n\n\
+      users.age and max of users.username and st_length of users.location from users\n\
+      \                                        ^\nExpected one of: \n\t* COLUMN\n"
+    picked: null
+    binder_debug: []
+    sanitized_diffs: 1
+seed: null
+params:
+  num_phrases: 100
+  success_threshold: 0.9
+  max_candidates: 50
+  binder_mode:
+    strict_types: true
+    coerce_types: false
+    allow_ordering_funcs_in_args: false

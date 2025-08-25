@@ -1,0 +1,19 @@
+?query: "select" column_list _tbl_connector TABLE
+
+_tbl_connector: "from" | "of"
+
+?column_list: selectable
+            | selectable ("," selectable)+ (","? "and" selectable)?
+            | selectable "and" selectable
+
+?selectable: COLUMN
+           | FUNCTION ["of" column_args]
+
+column_args: COLUMN ("," COLUMN)* (","? "and" COLUMN)?
+
+TABLE: "regions" | "sales" | "users"
+COLUMN: "regions.boundaries" | "regions.name" | "regions.region_id" | "sales.price" | "sales.product_name" | "sales.quantity" | "sales.sale_date" | "sales.sale_id" | "sales.user_id" | "users.age" | "users.balance" | "users.is_active" | "users.last_login" | "users.location" | "users.user_id" | "users.username"
+FUNCTION: "avg" | "cast" | "concat" | "count" | "distinct" | "extract" | "group_by" | "having" | "length" | "limit" | "max" | "min" | "order_by_asc" | "order_by_desc" | "st_area" | "st_buffer" | "st_centroid" | "st_contains" | "st_crosses" | "st_distance" | "st_distance_operator" | "st_geometrytype" | "st_intersects" | "st_length" | "st_perimeter" | "st_simplify" | "st_spatial_index" | "st_touches" | "st_transform" | "st_union" | "st_within" | "st_x" | "st_y" | "sum"
+
+%import common.WS
+%ignore WS

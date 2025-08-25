@@ -1,0 +1,10 @@
+histogram:
+  1: 96
+  2: 4
+fail_categories:
+  binder_fail: 8
+  parser_fail: 1
+params:
+  num_phrases: 100
+  max_candidates: 50
+  seed: null

@@ -1,0 +1,210 @@
+tables:
+  users:
+    aliases:
+    - account
+    - accounts
+    - client
+    - clients
+    - customer
+    - customers
+    - people
+    - user
+    - users
+    columns:
+      user_id:
+        aliases:
+        - account number
+        - client id
+        - customer id
+        - user id
+        - user identifier
+        - user ids
+        - user number
+        - user_id
+        type: INTEGER
+        labels:
+        - id
+      username:
+        aliases:
+        - account name
+        - handle
+        - login
+        - user name
+        - user names
+        - username
+        - usernames
+        type: VARCHAR(50)
+        labels: []
+      age:
+        aliases:
+        - age
+        - ages
+        - years old
+        type: INT
+        labels: []
+      balance:
+        aliases:
+        - account balance
+        - amount
+        - balance
+        - balances
+        - credit
+        - funds
+        type: DECIMAL(10, 2)
+        labels: []
+      is_active:
+        aliases:
+        - account status
+        - active status
+        - is active
+        - is actives
+        - is_active
+        - status
+        type: BOOLEAN
+        labels: []
+      last_login:
+        aliases:
+        - last access
+        - last active date
+        - last login
+        - last logins
+        - last signed in
+        - last_login
+        - most recent login
+        type: TIMESTAMP
+        labels: []
+      location:
+        aliases:
+        - coordinates
+        - geo location
+        - geographic coordinates
+        - location
+        - locations
+        - place
+        - position
+        type: geography_point
+        labels:
+        - postgis
+  sales:
+    aliases:
+    - order
+    - orders
+    - purchase
+    - purchases
+    - sale
+    - sales
+    - transaction
+    - transactions
+    columns:
+      sale_id:
+        aliases:
+        - order id
+        - order number
+        - purchase id
+        - sale id
+        - sale ids
+        - sale_id
+        - transaction id
+        type: INTEGER
+        labels:
+        - id
+      user_id:
+        aliases:
+        - account number
+        - client id
+        - customer id
+        - user id
+        - user identifier
+        - user ids
+        - user number
+        - user_id
+        type: INTEGER
+        labels:
+        - id
+      product_name:
+        aliases:
+        - item
+        - item name
+        - item sold
+        - product
+        - product name
+        - product names
+        - product_name
+        type: TEXT
+        labels: []
+      sale_date:
+        aliases:
+        - order date
+        - purchase date
+        - sale date
+        - sale dates
+        - sale_date
+        - transaction date
+        - when it was sold
+        type: DATE
+        labels: []
+      quantity:
+        aliases:
+        - amount sold
+        - item count
+        - number of items
+        - number sold
+        - quantities
+        - quantity
+        type: INT
+        labels: []
+      price:
+        aliases:
+        - amount
+        - charge
+        - cost
+        - how much
+        - price
+        - prices
+        - value
+        type: FLOAT
+        labels: []
+  regions:
+    aliases:
+    - area
+    - areas
+    - district
+    - region
+    - regions
+    - territory
+    - zone
+    - zones
+    columns:
+      region_id:
+        aliases:
+        - area id
+        - region id
+        - region ids
+        - region number
+        - region_id
+        - zone id
+        type: INTEGER
+        labels:
+        - id
+      name:
+        aliases:
+        - identifier
+        - label
+        - name
+        - names
+        - title
+        type: VARCHAR(50)
+        labels: []
+      boundaries:
+        aliases:
+        - area shape
+        - border
+        - boundaries
+        - boundary
+        - geometry
+        - outline
+        - perimeter
+        - shape
+        type: geography_polygon
+        labels:
+        - postgis

@@ -1,0 +1,699 @@
+deterministic_aliases:
+  users: users
+  accounts: users
+  clients: users
+  customers: users
+  people: users
+  user_id: user_id
+  username: users.username
+  handle: username
+  login: username
+  usernames: username
+  age: users.age
+  ages: age
+  balance: users.balance
+  balances: balance
+  credit: balance
+  funds: balance
+  is_active: users.is_active
+  status: is_active
+  last_login: users.last_login
+  location: users.location
+  coordinates: location
+  locations: location
+  place: location
+  position: location
+  sales: sales
+  orders: sales
+  purchases: sales
+  transactions: sales
+  sale_id: sales.sale_id
+  product_name: sales.product_name
+  item: product_name
+  product: product_name
+  sale_date: sales.sale_date
+  quantity: sales.quantity
+  quantities: quantity
+  price: sales.price
+  charge: price
+  cost: price
+  prices: price
+  value: price
+  regions: regions
+  area: st_area
+  areas: regions
+  district: regions
+  territory: regions
+  zones: regions
+  region_id: regions.region_id
+  name: regions.name
+  identifier: name
+  label: name
+  names: name
+  title: name
+  boundaries: regions.boundaries
+  border: boundaries
+  boundary: boundaries
+  geometry: boundaries
+  outline: boundaries
+  shape: boundaries
+  count: count
+  number: count
+  sum: sum
+  aggregate: sum
+  total: sum
+  avg: avg
+  average: avg
+  mean: avg
+  min: min
+  bottom: min
+  least: min
+  lowest: min
+  minimum: min
+  smallest: min
+  max: max
+  greatest: max
+  highest: max
+  largest: max
+  maximum: max
+  most: max
+  distinct: distinct
+  unique: distinct
+  order_by_asc: order_by_asc
+  order_by_desc: order_by_desc
+  group_by: group_by
+  having: having
+  limit: limit
+  first: limit
+  only: limit
+  top: limit
+  extract: extract
+  length: length
+  concat: concat
+  concatenate: concat
+  join: concat
+  cast: cast
+  convert: cast
+  st_perimeter: st_perimeter
+  st_distance: st_distance
+  distance: st_distance
+  st_intersects: st_intersects
+  intersects: st_intersects
+  st_area: st_area
+  st_length: st_length
+  st_x: st_x
+  lon: st_x
+  longitude: st_x
+  st_y: st_y
+  lat: st_y
+  latitude: st_y
+  st_within: st_within
+  inside: st_within
+  within: st_within
+  st_contains: st_contains
+  contains: st_contains
+  encloses: st_contains
+  surrounds: st_contains
+  st_geometrytype: st_geometrytype
+  st_buffer: st_buffer
+  buffer: st_buffer
+  st_union: st_union
+  merge: st_union
+  union: st_union
+  st_centroid: st_centroid
+  center: st_centroid
+  centroid: st_centroid
+  st_simplify: st_simplify
+  generalize: st_simplify
+  simplify: st_simplify
+  st_touches: st_touches
+  borders: st_touches
+  touches: st_touches
+  st_crosses: st_crosses
+  crosses: st_crosses
+  st_spatial_index: st_spatial_index
+  st_distance_operator: st_distance_operator
+  closest: st_distance_operator
+  nearest: st_distance_operator
+  st_transform: st_transform
+  reproject: st_transform
+  transform: st_transform
+  equal: equal
+  '=': equal
+  ==: equal
+  equals: equal
+  exactly: equal
+  is: equal
+  not_equal: not_equal
+  '!=': not_equal
+  <>: not_equal
+  isn't: not_equal
+  greater_than: greater_than
+  '>': greater_than
+  above: greater_than
+  exceeds: greater_than
+  over: greater_than
+  less_than: less_than
+  <: less_than
+  below: less_than
+  under: less_than
+  greater_than_or_equal: greater_than_or_equal
+  '>=': greater_than_or_equal
+  less_than_or_equal: less_than_or_equal
+  <=: less_than_or_equal
+  between: between
+  like: like
+  matches: like
+  is_null: is_null
+  is_not_null: is_not_null
+  exists: is_not_null
+  _skip: ''
+  a: ''
+  all: ''
+  an: ''
+  any: ''
+  are: ''
+  for: ''
+  me: ''
+  some: ''
+  that: ''
+  the: ''
+  their: ''
+  which: ''
+  who: ''
+  of: of
+  from: from
+  _on: _on
+  'on': 'on'
+  at: at
+  and: and
+  '&&': '&&'
+  or: or
+  '||': '||'
+  not: not
+  '!': '!'
+  select: select
+  display: display
+  fetch: fetch
+  find: find
+  get: get
+  list: list
+  retrieve: retrieve
+  show: show
+  what: what
+  items: product_name
+  values: price
+  in: in
+  with: ''
+  belonging to: belonging to
+  give me: give me
+  tell me: tell me
+  users.user_id: users.user_id
+  users.username: users.username
+  sales.user_id: sales.user_id
+  sales.sale_date: sales.sale_date
+  regions.name: regions.name
+  users.age: users.age
+  regions.region_id: regions.region_id
+  users.last_login: users.last_login
+  sales.price: sales.price
+  users.balance: users.balance
+  sales.product_name: sales.product_name
+  users.location: users.location
+  sales.quantity: sales.quantity
+  users.is_active: users.is_active
+  regions.boundaries: regions.boundaries
+  sales.sale_id: sales.sale_id
+non_deterministic_aliases:
+  account number:
+  - user_id
+  client id:
+  - user_id
+  customer id:
+  - user_id
+  user id:
+  - user_id
+  user identifier:
+  - user_id
+  user ids:
+  - user_id
+  user number:
+  - user_id
+  account name:
+  - username
+  user name:
+  - username
+  user names:
+  - username
+  years old:
+  - age
+  account balance:
+  - balance
+  amount:
+  - balance
+  - price
+  account status:
+  - is_active
+  active status:
+  - is_active
+  is active:
+  - is_active
+  is actives:
+  - is_active
+  last access:
+  - last_login
+  last active date:
+  - last_login
+  last login:
+  - last_login
+  last logins:
+  - last_login
+  last signed in:
+  - last_login
+  most recent login:
+  - last_login
+  geo location:
+  - location
+  geographic coordinates:
+  - location
+  order id:
+  - sale_id
+  order number:
+  - sale_id
+  purchase id:
+  - sale_id
+  sale id:
+  - sale_id
+  sale ids:
+  - sale_id
+  transaction id:
+  - sale_id
+  item name:
+  - product_name
+  item sold:
+  - product_name
+  product name:
+  - product_name
+  product names:
+  - product_name
+  order date:
+  - sale_date
+  purchase date:
+  - sale_date
+  sale date:
+  - sale_date
+  sale dates:
+  - sale_date
+  transaction date:
+  - sale_date
+  when it was sold:
+  - sale_date
+  amount sold:
+  - quantity
+  item count:
+  - quantity
+  number of items:
+  - quantity
+  number sold:
+  - quantity
+  how much:
+  - price
+  area id:
+  - region_id
+  region id:
+  - region_id
+  region ids:
+  - region_id
+  region number:
+  - region_id
+  zone id:
+  - region_id
+  area shape:
+  - boundaries
+  perimeter:
+  - boundaries
+  - st_perimeter
+  how many:
+  - count
+  number of:
+  - count
+  quantity of:
+  - count
+  total number of:
+  - count
+  sum of:
+  - sum
+  total amount of:
+  - sum
+  total of:
+  - sum
+  average of:
+  - avg
+  unique values of:
+  - distinct
+  in ascending order:
+  - order_by_asc
+  order by ascending:
+  - order_by_asc
+  sort by ascending:
+  - order_by_asc
+  in descending order:
+  - order_by_desc
+  order by descending:
+  - order_by_desc
+  sort by descending:
+  - order_by_desc
+  group by:
+  - group_by
+  grouped by:
+  - group_by
+  with:
+  - having
+  - with
+  get the:
+  - extract
+  character count:
+  - length
+  length in:
+  - length
+  length of:
+  - length
+  - st_length
+  string length:
+  - length
+  combine:
+  - concat
+  - st_union
+  change type:
+  - cast
+  boundary length:
+  - st_perimeter
+  length of boundary:
+  - st_perimeter
+  outline length:
+  - st_perimeter
+  distance between:
+  - st_distance
+  how far:
+  - st_distance
+  separation of:
+  - st_distance
+  overlaps with:
+  - st_intersects
+  area of:
+  - st_area
+  size of:
+  - st_area
+  surface area:
+  - st_area
+  distance along:
+  - st_length
+  distance of:
+  - st_length
+  length along:
+  - st_length
+  line length:
+  - st_length
+  path length:
+  - st_length
+  x coordinate:
+  - st_x
+  x pos:
+  - st_x
+  y coordinate:
+  - st_y
+  y pos:
+  - st_y
+  contained in:
+  - st_within
+  is inside:
+  - st_within
+  is within:
+  - st_within
+  geometry type:
+  - st_geometrytype
+  shape type:
+  - st_geometrytype
+  type of geometry:
+  - st_geometrytype
+  what kind of shape:
+  - st_geometrytype
+  area around:
+  - st_buffer
+  buffer around:
+  - st_buffer
+  expand by:
+  - st_buffer
+  union of:
+  - st_union
+  center point:
+  - st_centroid
+  geometric center:
+  - st_centroid
+  simplify shape:
+  - st_simplify
+  is adjacent to:
+  - st_touches
+  goes across:
+  - st_crosses
+  spatial index:
+  - st_spatial_index
+  closest to:
+  - st_distance_operator
+  convert coordinate system:
+  - st_transform
+  equal to:
+  - equal
+  is exactly:
+  - equal
+  is the same as:
+  - equal
+  does not equal:
+  - not_equal
+  is not:
+  - not_equal
+  is not equal to:
+  - not_equal
+  is greater than:
+  - greater_than
+  more than:
+  - greater_than
+  is less than:
+  - less_than
+  smaller than:
+  - less_than
+  at least:
+  - greater_than_or_equal
+  is at least:
+  - greater_than_or_equal
+  is greater than or equal to:
+  - greater_than_or_equal
+  not less than:
+  - greater_than_or_equal
+  at most:
+  - less_than_or_equal
+  is at most:
+  - less_than_or_equal
+  is less than or equal to:
+  - less_than_or_equal
+  not more than:
+  - less_than_or_equal
+  up to:
+  - less_than_or_equal
+  in the range of:
+  - between
+  is between:
+  - between
+  is in:
+  - in
+  is one of:
+  - in
+  one of:
+  - in
+  ends with:
+  - like
+  starts with:
+  - like
+  has no value:
+  - is_null
+  is empty:
+  - is_null
+  is missing:
+  - is_null
+  is null:
+  - is_null
+  has a value:
+  - is_not_null
+  is not empty:
+  - is_not_null
+  is not null:
+  - is_not_null
+  is present:
+  - is_not_null
+  belonging to:
+  - belonging to
+  give me:
+  - give me
+  tell me:
+  - tell me
+  client ids:
+  - user_id
+  customer ids:
+  - user_id
+  account names:
+  - username
+  last active dates:
+  - last_login
+  order ids:
+  - sale_id
+  purchase ids:
+  - sale_id
+  transaction ids:
+  - sale_id
+  item names:
+  - product_name
+  order dates:
+  - sale_date
+  purchase dates:
+  - sale_date
+  transaction dates:
+  - sale_date
+  area ids:
+  - region_id
+  zone ids:
+  - region_id
+connectors:
+- name: OF
+  surface: of
+- name: FROM
+  surface: from
+- name: AND
+  surface: and
+- name: COMMA
+  surface: ','
+- name: OR
+  surface: or
+connector_map:
+  OF: of
+  FROM: from
+  AND: and
+  COMMA: ','
+  OR: or
+_diagnostics:
+  generic_denied:
+  - order by
+  - sort by
+  prefix_collisions:
+  - alias: account
+    longer_keys:
+    - account balance
+    - account name
+    - account names
+    - account number
+    - account status
+    action: dropped_table_meaning
+  - alias: client
+    longer_keys:
+    - client id
+    - client ids
+    action: dropped_table_meaning
+  - alias: customer
+    longer_keys:
+    - customer id
+    - customer ids
+    action: dropped_table_meaning
+  - alias: user
+    longer_keys:
+    - user id
+    - user identifier
+    - user ids
+    - user name
+    - user names
+    - user number
+    action: dropped_table_meaning
+  - alias: order
+    longer_keys:
+    - order by ascending
+    - order by descending
+    - order date
+    - order dates
+    - order id
+    - order ids
+    - order number
+    action: dropped_table_meaning
+  - alias: purchase
+    longer_keys:
+    - purchase date
+    - purchase dates
+    - purchase id
+    - purchase ids
+    action: dropped_table_meaning
+  - alias: sale
+    longer_keys:
+    - sale date
+    - sale dates
+    - sale id
+    - sale ids
+    action: dropped_table_meaning
+  - alias: transaction
+    longer_keys:
+    - transaction date
+    - transaction dates
+    - transaction id
+    - transaction ids
+    action: dropped_table_meaning
+  - alias: area
+    longer_keys:
+    - area around
+    - area id
+    - area ids
+    - area of
+    - area shape
+    action: dropped_table_meaning
+  - alias: region
+    longer_keys:
+    - region id
+    - region ids
+    - region number
+    action: dropped_table_meaning
+  - alias: zone
+    longer_keys:
+    - zone id
+    - zone ids
+    action: dropped_table_meaning
+  preposition_conflicts:
+  - alias: in
+    dropped: 1
+  domain_conflicts: []
+  plural_added:
+  - from: client id
+    to: client ids
+  - from: customer id
+    to: customer ids
+  - from: account name
+    to: account names
+  - from: last active date
+    to: last active dates
+  - from: order id
+    to: order ids
+  - from: purchase id
+    to: purchase ids
+  - from: transaction id
+    to: transaction ids
+  - from: item
+    to: items
+  - from: item name
+    to: item names
+  - from: order date
+    to: order dates
+  - from: purchase date
+    to: purchase dates
+  - from: transaction date
+    to: transaction dates
+  - from: value
+    to: values
+  - from: area id
+    to: area ids
+  - from: zone id
+    to: zone ids
+  alias_collisions: []

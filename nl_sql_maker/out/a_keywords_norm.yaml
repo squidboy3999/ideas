@@ -1,0 +1,775 @@
+functions:
+  count:
+    aliases:
+    - count
+    - how many
+    - number
+    - number of
+    - quantity of
+    - total number of
+    template: COUNT({column})
+    label_rules:
+    - not id
+    applicable_types:
+      column:
+      - any
+  sum:
+    aliases:
+    - aggregate
+    - sum
+    - sum of
+    - total
+    - total amount of
+    - total of
+    template: SUM({column})
+    label_rules:
+    - not id
+    applicable_types:
+      column:
+      - numeric
+  avg:
+    aliases:
+    - average
+    - average of
+    - avg
+    - mean
+    template: AVG({column})
+    label_rules:
+    - not id
+    applicable_types:
+      column:
+      - numeric
+  min:
+    aliases:
+    - bottom
+    - least
+    - lowest
+    - min
+    - minimum
+    - smallest
+    template: MIN({column})
+    applicable_types:
+      column:
+      - numeric
+      - text
+      - date
+      - timestamp
+  max:
+    aliases:
+    - greatest
+    - highest
+    - largest
+    - max
+    - maximum
+    - most
+    template: MAX({column})
+    applicable_types:
+      column:
+      - numeric
+      - text
+      - date
+      - timestamp
+  distinct:
+    aliases:
+    - distinct
+    - unique
+    - unique values of
+    template: DISTINCT {column}
+    label_rules:
+    - not id
+    applicable_types:
+      column:
+      - any
+  order_by_asc:
+    aliases:
+    - in ascending order
+    - order by
+    - order by ascending
+    - sort by
+    - sort by ascending
+    template: ORDER BY {column} ASC
+    applicable_types:
+      column:
+      - any
+  order_by_desc:
+    aliases:
+    - in descending order
+    - order by descending
+    - sort by descending
+    template: ORDER BY {column} DESC
+    applicable_types:
+      column:
+      - any
+  group_by:
+    aliases:
+    - group by
+    - grouped by
+    template: GROUP BY {column}
+    applicable_types:
+      column:
+      - any
+  having:
+    aliases:
+    - having
+    - with
+    template: HAVING {condition}
+    applicable_types:
+      condition:
+      - any
+  limit:
+    aliases:
+    - first
+    - limit
+    - only
+    - top
+    template: LIMIT {value}
+    applicable_types:
+      value:
+      - numeric
+  extract:
+    aliases:
+    - extract
+    - get the
+    template: EXTRACT({part} FROM {column})
+    pattern:
+    - '{part}'
+    - from
+    - '{column}'
+    applicable_types:
+      part:
+      - any
+      column:
+      - date
+      - timestamp
+  length:
+    aliases:
+    - character count
+    - length in
+    - length of
+    - string length
+    template: LENGTH({column})
+    applicable_types:
+      column:
+      - text
+  concat:
+    aliases:
+    - combine
+    - concat
+    - concatenate
+    - join
+    template: CONCAT({column1}, {column2})
+    pattern:
+    - '{column1}'
+    - and
+    - '{column2}'
+    applicable_types:
+      column1:
+      - text
+      column2:
+      - text
+  cast:
+    aliases:
+    - cast
+    - change type
+    - convert
+    template: CAST({column} AS {to_type})
+    pattern:
+    - '{column}'
+    - to
+    - '{to_type}'
+    applicable_types:
+      column:
+      - any
+      to_type:
+      - any
+  st_perimeter:
+    aliases:
+    - boundary length
+    - length of boundary
+    - outline length
+    - perimeter
+    template: ST_Perimeter({geom})
+    label_rules:
+    - postgis
+    applicable_types:
+      geom:
+      - geometry_polygon
+      - geography_polygon
+  st_distance:
+    aliases:
+    - distance
+    - distance between
+    - how far
+    - separation of
+    template: ST_Distance({geom1}, {geom2})
+    pattern:
+    - of
+    - '{geom1}'
+    - from
+    - '{geom2}'
+    label_rules:
+    - postgis
+    applicable_types:
+      geom1:
+      - geometry_point
+      - geography_point
+      - geometry_linestring
+      - geography_linestring
+      - geometry_polygon
+      - geography_polygon
+      geom2:
+      - geometry_point
+      - geography_point
+      - geometry_linestring
+      - geography_linestring
+      - geometry_polygon
+      - geography_polygon
+  st_intersects:
+    aliases:
+    - intersects
+    - overlaps with
+    template: ST_Intersects({geom1}, {geom2})
+    pattern:
+    - '{geom1}'
+    - with
+    - '{geom2}'
+    label_rules:
+    - postgis
+    applicable_types:
+      geom1:
+      - geometry
+      - geography
+      - geometry_point
+      - geometry_linestring
+      - geometry_polygon
+      geom2:
+      - geometry
+      - geography
+      - geometry_point
+      - geometry_linestring
+      - geometry_polygon
+  st_area:
+    aliases:
+    - area
+    - area of
+    - size of
+    - surface area
+    template: ST_Area({geom})
+    label_rules:
+    - postgis
+    applicable_types:
+      geom:
+      - geometry_polygon
+      - geography_polygon
+  st_length:
+    aliases:
+    - distance along
+    - distance of
+    - length along
+    - length of
+    - line length
+    - path length
+    template: ST_Length({geom})
+    label_rules:
+    - postgis
+    applicable_types:
+      geom:
+      - geometry_linestring
+      - geography_linestring
+  st_x:
+    aliases:
+    - lon
+    - longitude
+    - x coordinate
+    - x pos
+    template: ST_X({point})
+    label_rules:
+    - postgis
+    applicable_types:
+      point:
+      - geometry_point
+      - geography_point
+  st_y:
+    aliases:
+    - lat
+    - latitude
+    - y coordinate
+    - y pos
+    template: ST_Y({point})
+    label_rules:
+    - postgis
+    applicable_types:
+      point:
+      - geometry_point
+      - geography_point
+  st_within:
+    aliases:
+    - contained in
+    - inside
+    - is inside
+    - is within
+    - within
+    template: ST_Within({geom1}, {geom2})
+    pattern:
+    - '{geom1}'
+    - in
+    - '{geom2}'
+    label_rules:
+    - postgis
+    applicable_types:
+      geom1:
+      - geometry
+      - geography
+      - geometry_point
+      - geometry_linestring
+      - geometry_polygon
+      geom2:
+      - geometry
+      - geography
+      - geometry_point
+      - geometry_linestring
+      - geometry_polygon
+  st_contains:
+    aliases:
+    - contains
+    - encloses
+    - surrounds
+    template: ST_Contains({geom1}, {geom2})
+    pattern:
+    - '{geom1}'
+    - and
+    - '{geom2}'
+    label_rules:
+    - postgis
+    applicable_types:
+      geom1:
+      - geometry
+      - geography
+      - geometry_polygon
+      geom2:
+      - geometry
+      - geography
+      - geometry_point
+      - geometry_linestring
+      - geometry_polygon
+  st_geometrytype:
+    aliases:
+    - geometry type
+    - shape type
+    - type of geometry
+    - what kind of shape
+    template: ST_GeometryType({geom})
+    label_rules:
+    - postgis
+    applicable_types:
+      geom:
+      - geometry
+      - geography
+      - geometry_point
+      - geometry_linestring
+      - geometry_polygon
+  st_buffer:
+    aliases:
+    - area around
+    - buffer
+    - buffer around
+    - expand by
+    template: ST_Buffer({geom}, {radius})
+    pattern:
+    - '{geom}'
+    - by
+    - '{radius}'
+    label_rules:
+    - postgis
+    applicable_types:
+      geom:
+      - geometry
+      - geography
+      - geometry_point
+      - geometry_linestring
+      - geometry_polygon
+      radius:
+      - numeric
+  st_union:
+    aliases:
+    - combine
+    - merge
+    - union
+    - union of
+    template: ST_Union({geom_collection})
+    label_rules:
+    - postgis
+    applicable_types:
+      geom_collection:
+      - geometry
+      - geography
+      - geometry_point
+      - geometry_linestring
+      - geometry_polygon
+  st_centroid:
+    aliases:
+    - center
+    - center point
+    - centroid
+    - geometric center
+    template: ST_Centroid({geom})
+    label_rules:
+    - postgis
+    applicable_types:
+      geom:
+      - geometry
+      - geography
+      - geometry_point
+      - geometry_linestring
+      - geometry_polygon
+  st_simplify:
+    aliases:
+    - generalize
+    - simplify
+    - simplify shape
+    template: ST_Simplify({geom}, {tolerance})
+    pattern:
+    - '{geom}'
+    - by
+    - '{tolerance}'
+    label_rules:
+    - postgis
+    applicable_types:
+      geom:
+      - geometry_linestring
+      - geometry_polygon
+      - geography_linestring
+      - geography_polygon
+      tolerance:
+      - numeric
+  st_touches:
+    aliases:
+    - borders
+    - is adjacent to
+    - touches
+    template: ST_Touches({geom1}, {geom2})
+    pattern:
+    - '{geom1}'
+    - and
+    - '{geom2}'
+    label_rules:
+    - postgis
+    applicable_types:
+      geom1:
+      - geometry
+      - geography
+      - geometry_point
+      - geometry_linestring
+      - geometry_polygon
+      geom2:
+      - geometry
+      - geography
+      - geometry_point
+      - geometry_linestring
+      - geometry_polygon
+  st_crosses:
+    aliases:
+    - crosses
+    - goes across
+    template: ST_Crosses({geom1}, {geom2})
+    pattern:
+    - '{geom1}'
+    - and
+    - '{geom2}'
+    label_rules:
+    - postgis
+    applicable_types:
+      geom1:
+      - geometry
+      - geography
+      - geometry_linestring
+      - geometry_polygon
+      geom2:
+      - geometry
+      - geography
+      - geometry_linestring
+  st_spatial_index:
+    aliases:
+    - spatial index
+    template: '{geom1} && {geom2}'
+    pattern:
+    - '{geom1}'
+    - with
+    - '{geom2}'
+    label_rules:
+    - postgis
+    applicable_types:
+      geom1:
+      - geometry
+      - geography
+      - geometry_point
+      - geometry_linestring
+      - geometry_polygon
+      geom2:
+      - geometry
+      - geography
+      - geometry_point
+      - geometry_linestring
+      - geometry_polygon
+  st_distance_operator:
+    aliases:
+    - closest
+    - closest to
+    - nearest
+    template: '{geom1} <-> {geom2}'
+    pattern:
+    - '{geom1}'
+    - to
+    - '{geom2}'
+    label_rules:
+    - postgis
+    applicable_types:
+      geom1:
+      - geometry
+      - geography
+      - geometry_point
+      - geometry_linestring
+      - geometry_polygon
+      geom2:
+      - geometry
+      - geography
+      - geometry_point
+      - geometry_linestring
+      - geometry_polygon
+  st_transform:
+    aliases:
+    - convert coordinate system
+    - reproject
+    - transform
+    template: ST_Transform({geom}, {srid})
+    pattern:
+    - '{geom}'
+    - to
+    - '{srid}'
+    label_rules:
+    - postgis
+    applicable_types:
+      geom:
+      - geometry
+      - geography
+      - geometry_point
+      - geometry_linestring
+      - geometry_polygon
+      srid:
+      - numeric
+operators:
+  equal:
+    aliases:
+    - '='
+    - ==
+    - equal to
+    - equals
+    - exactly
+    - is
+    - is exactly
+    - is the same as
+    template: '{column} = {value}'
+    applicable_types:
+      column:
+      - any
+      value:
+      - any
+  not_equal:
+    aliases:
+    - '!='
+    - <>
+    - does not equal
+    - is not
+    - is not equal to
+    - isn't
+    template: '{column} != {value}'
+    applicable_types:
+      column:
+      - any
+      value:
+      - any
+  greater_than:
+    aliases:
+    - '>'
+    - above
+    - exceeds
+    - is greater than
+    - more than
+    - over
+    template: '{column} > {value}'
+    applicable_types:
+      column:
+      - numeric
+      - date
+      - timestamp
+      value:
+      - numeric
+      - date
+      - timestamp
+  less_than:
+    aliases:
+    - <
+    - below
+    - is less than
+    - smaller than
+    - under
+    template: '{column} < {value}'
+    applicable_types:
+      column:
+      - numeric
+      - date
+      - timestamp
+      value:
+      - numeric
+      - date
+      - timestamp
+  greater_than_or_equal:
+    aliases:
+    - '>='
+    - at least
+    - is at least
+    - is greater than or equal to
+    - not less than
+    template: '{column} >= {value}'
+    applicable_types:
+      column:
+      - numeric
+      - date
+      - timestamp
+      value:
+      - numeric
+      - date
+      - timestamp
+  less_than_or_equal:
+    aliases:
+    - <=
+    - at most
+    - is at most
+    - is less than or equal to
+    - not more than
+    - up to
+    template: '{column} <= {value}'
+    applicable_types:
+      column:
+      - numeric
+      - date
+      - timestamp
+      value:
+      - numeric
+      - date
+      - timestamp
+  between:
+    aliases:
+    - between
+    - in the range of
+    - is between
+    template: '{column} BETWEEN {value1} AND {value2}'
+    pattern:
+    - '{value1}'
+    - and
+    - '{value2}'
+    applicable_types:
+      column:
+      - numeric
+      - date
+      - timestamp
+      value1:
+      - numeric
+      - date
+      - timestamp
+      value2:
+      - numeric
+      - date
+      - timestamp
+  in:
+    aliases:
+    - in
+    - is in
+    - is one of
+    - one of
+    template: '{column} IN ({values})'
+    applicable_types:
+      column:
+      - any
+      values:
+      - any
+  like:
+    aliases:
+    - ends with
+    - like
+    - matches
+    - starts with
+    template: '{column} LIKE {value}'
+    applicable_types:
+      column:
+      - text
+      value:
+      - text
+  is_null:
+    aliases:
+    - has no value
+    - is empty
+    - is missing
+    - is null
+    template: '{column} IS NULL'
+    applicable_types:
+      column:
+      - any
+  is_not_null:
+    aliases:
+    - exists
+    - has a value
+    - is not empty
+    - is not null
+    - is present
+    template: '{column} IS NOT NULL'
+    applicable_types:
+      column:
+      - any
+select_verbs:
+- select
+- display
+- fetch
+- find
+- get
+- give me
+- list
+- retrieve
+- show
+- tell me
+- what
+prepositions:
+- of
+- from
+- _on
+- 'on'
+- at
+- belonging to
+logical_operators:
+- and
+- '&&'
+- or
+- '||'
+- not
+- '!'
+filler_words:
+- _skip
+- a
+- all
+- an
+- any
+- are
+- for
+- me
+- some
+- that
+- the
+- their
+- which
+- who
+- with
+connectors:
+  OF: of
+  FROM: from
+  AND: and
+  OR: or

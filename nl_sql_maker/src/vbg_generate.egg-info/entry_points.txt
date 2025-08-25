@@ -1,0 +1,4 @@
+[console_scripts]
+vbg_generate = vbg_generate.vbg_pipeline:main
+vbg_phrase_explorer = vbg_tools.phrase_explorer:main
+vbg_runtime = vbg_runtime.cli:main

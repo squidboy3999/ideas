@@ -1,0 +1,4389 @@
+users:
+  entity_type: table
+  metadata:
+    aliases:
+    - account
+    - accounts
+    - client
+    - clients
+    - customer
+    - customers
+    - people
+    - user
+    - users
+    columns:
+      users.user_id: {}
+      users.username: {}
+      users.age: {}
+      users.balance: {}
+      users.is_active: {}
+      users.last_login: {}
+      users.location: {}
+users.user_id:
+  entity_type: column
+  metadata:
+    type: int
+    labels:
+    - id
+    aliases:
+    - account number
+    - client id
+    - customer id
+    - user id
+    - user identifier
+    - user ids
+    - user number
+    - user_id
+    table: users
+    canonical: user_id
+    type_category: int
+    profile:
+      selectivity: high
+      groupable: true
+users.username:
+  entity_type: column
+  metadata:
+    type: text
+    labels: []
+    aliases:
+    - account name
+    - handle
+    - login
+    - user name
+    - user names
+    - username
+    - usernames
+    table: users
+    canonical: username
+    type_category: text
+    profile:
+      selectivity: medium
+      groupable: false
+users.age:
+  entity_type: column
+  metadata:
+    type: int
+    labels: []
+    aliases:
+    - age
+    - ages
+    - years old
+    table: users
+    canonical: age
+    type_category: int
+    profile:
+      selectivity: medium
+      groupable: false
+users.balance:
+  entity_type: column
+  metadata:
+    type: float
+    labels: []
+    aliases:
+    - account balance
+    - amount
+    - balance
+    - balances
+    - credit
+    - funds
+    table: users
+    canonical: balance
+    type_category: float
+    profile:
+      selectivity: medium
+      groupable: false
+users.is_active:
+  entity_type: column
+  metadata:
+    type: bool
+    labels:
+    - boolean_like
+    aliases:
+    - account status
+    - active status
+    - is active
+    - is actives
+    - is_active
+    - status
+    table: users
+    canonical: is_active
+    type_category: bool
+    profile:
+      selectivity: medium
+      groupable: false
+users.last_login:
+  entity_type: column
+  metadata:
+    type: datetime
+    labels: []
+    aliases:
+    - last access
+    - last active date
+    - last login
+    - last logins
+    - last signed in
+    - last_login
+    - most recent login
+    table: users
+    canonical: last_login
+    type_category: datetime
+    profile:
+      selectivity: medium
+      groupable: false
+users.location:
+  entity_type: column
+  metadata:
+    type: int
+    labels:
+    - postgis
+    aliases:
+    - coordinates
+    - geo location
+    - geographic coordinates
+    - location
+    - locations
+    - place
+    - position
+    table: users
+    canonical: location
+    type_category: int
+    profile:
+      selectivity: medium
+      groupable: false
+sales:
+  entity_type: table
+  metadata:
+    aliases:
+    - order
+    - orders
+    - purchase
+    - purchases
+    - sale
+    - sales
+    - transaction
+    - transactions
+    columns:
+      sales.sale_id: {}
+      sales.user_id: {}
+      sales.product_name: {}
+      sales.sale_date: {}
+      sales.quantity: {}
+      sales.price: {}
+sales.sale_id:
+  entity_type: column
+  metadata:
+    type: int
+    labels:
+    - id
+    aliases:
+    - order id
+    - order number
+    - purchase id
+    - sale id
+    - sale ids
+    - sale_id
+    - transaction id
+    table: sales
+    canonical: sale_id
+    type_category: int
+    profile:
+      selectivity: high
+      groupable: true
+sales.user_id:
+  entity_type: column
+  metadata:
+    type: int
+    labels:
+    - id
+    aliases:
+    - account number
+    - client id
+    - customer id
+    - user id
+    - user identifier
+    - user ids
+    - user number
+    - user_id
+    table: sales
+    canonical: user_id
+    type_category: int
+    profile:
+      selectivity: high
+      groupable: true
+sales.product_name:
+  entity_type: column
+  metadata:
+    type: text
+    labels: []
+    aliases:
+    - item
+    - item name
+    - item sold
+    - product
+    - product name
+    - product names
+    - product_name
+    table: sales
+    canonical: product_name
+    type_category: text
+    profile:
+      selectivity: medium
+      groupable: false
+sales.sale_date:
+  entity_type: column
+  metadata:
+    type: date
+    labels:
+    - date
+    aliases:
+    - order date
+    - purchase date
+    - sale date
+    - sale dates
+    - sale_date
+    - transaction date
+    - when it was sold
+    table: sales
+    canonical: sale_date
+    type_category: date
+    profile:
+      selectivity: medium
+      groupable: false
+sales.quantity:
+  entity_type: column
+  metadata:
+    type: int
+    labels: []
+    aliases:
+    - amount sold
+    - item count
+    - number of items
+    - number sold
+    - quantities
+    - quantity
+    table: sales
+    canonical: quantity
+    type_category: int
+    profile:
+      selectivity: medium
+      groupable: false
+sales.price:
+  entity_type: column
+  metadata:
+    type: float
+    labels: []
+    aliases:
+    - amount
+    - charge
+    - cost
+    - how much
+    - price
+    - prices
+    - value
+    table: sales
+    canonical: price
+    type_category: float
+    profile:
+      selectivity: medium
+      groupable: false
+regions:
+  entity_type: table
+  metadata:
+    aliases:
+    - area
+    - areas
+    - district
+    - region
+    - regions
+    - territory
+    - zone
+    - zones
+    columns:
+      regions.region_id: {}
+      regions.name: {}
+      regions.boundaries: {}
+regions.region_id:
+  entity_type: column
+  metadata:
+    type: int
+    labels:
+    - id
+    - low_cardinality
+    aliases:
+    - area id
+    - region id
+    - region ids
+    - region number
+    - region_id
+    - zone id
+    table: regions
+    canonical: region_id
+    type_category: int
+    profile:
+      selectivity: high
+      groupable: true
+regions.name:
+  entity_type: column
+  metadata:
+    type: text
+    labels: []
+    aliases:
+    - identifier
+    - label
+    - name
+    - names
+    - title
+    table: regions
+    canonical: name
+    type_category: text
+    profile:
+      selectivity: medium
+      groupable: false
+regions.boundaries:
+  entity_type: column
+  metadata:
+    type: geometry
+    labels:
+    - postgis
+    aliases:
+    - area shape
+    - border
+    - boundaries
+    - boundary
+    - geometry
+    - outline
+    - perimeter
+    - shape
+    table: regions
+    canonical: boundaries
+    type_category: geometry
+    profile:
+      selectivity: medium
+      groupable: false
+_catalogs:
+  column_token_to_fqids:
+    user_id:
+    - users.user_id
+    - sales.user_id
+    username:
+    - users.username
+    age:
+    - users.age
+    balance:
+    - users.balance
+    is_active:
+    - users.is_active
+    last_login:
+    - users.last_login
+    location:
+    - users.location
+    sale_id:
+    - sales.sale_id
+    product_name:
+    - sales.product_name
+    sale_date:
+    - sales.sale_date
+    quantity:
+    - sales.quantity
+    price:
+    - sales.price
+    region_id:
+    - regions.region_id
+    name:
+    - regions.name
+    boundaries:
+    - regions.boundaries
+  table_to_column_tokens:
+    users:
+    - user_id
+    - username
+    - age
+    - balance
+    - is_active
+    - last_login
+    - location
+    sales:
+    - sale_id
+    - user_id
+    - product_name
+    - sale_date
+    - quantity
+    - price
+    regions:
+    - region_id
+    - name
+    - boundaries
+count:
+  entity_type: sql_actions
+  metadata:
+    aliases:
+    - count
+    - how many
+    - number
+    - number of
+    - quantity of
+    - total number of
+    label_rules:
+    - not id
+    applicable_types:
+      column:
+      - any
+  binder:
+    args:
+    - column
+    returns_type: int
+    class: aggregate
+    clause: select
+    applicable_types: &id003
+      column:
+      - any
+    label_rules: &id004 []
+    surfaces: []
+    compatibility:
+      total_compatible_columns: 16
+      per_table_compatible_counts:
+        users: 7
+        sales: 6
+        regions: 3
+      has_any_compat: true
+sum:
+  entity_type: sql_actions
+  metadata:
+    aliases:
+    - aggregate
+    - sum
+    - sum of
+    - total
+    - total amount of
+    - total of
+    label_rules:
+    - not id
+    applicable_types:
+      column:
+      - numeric
+  binder:
+    args:
+    - column
+    returns_type: float
+    class: aggregate
+    clause: select
+    applicable_types: &id005
+      column:
+      - any
+    label_rules: &id006 []
+    surfaces: []
+    compatibility:
+      total_compatible_columns: 16
+      per_table_compatible_counts:
+        users: 7
+        sales: 6
+        regions: 3
+      has_any_compat: true
+avg:
+  entity_type: sql_actions
+  metadata:
+    aliases:
+    - average
+    - average of
+    - avg
+    - mean
+    label_rules:
+    - not id
+    applicable_types:
+      column:
+      - numeric
+  binder:
+    args:
+    - column
+    returns_type: float
+    class: aggregate
+    clause: select
+    applicable_types: &id007
+      column:
+      - any
+    label_rules: &id008 []
+    surfaces: []
+    compatibility:
+      total_compatible_columns: 16
+      per_table_compatible_counts:
+        users: 7
+        sales: 6
+        regions: 3
+      has_any_compat: true
+min:
+  entity_type: sql_actions
+  metadata:
+    aliases:
+    - bottom
+    - least
+    - lowest
+    - min
+    - minimum
+    - smallest
+    label_rules: []
+    applicable_types:
+      column:
+      - numeric
+      - text
+      - date
+      - timestamp
+  binder:
+    args:
+    - column
+    returns_type: any
+    class: aggregate
+    clause: select
+    applicable_types: &id009
+      column:
+      - any
+    label_rules: &id010 []
+    surfaces: []
+    compatibility:
+      total_compatible_columns: 16
+      per_table_compatible_counts:
+        users: 7
+        sales: 6
+        regions: 3
+      has_any_compat: true
+max:
+  entity_type: sql_actions
+  metadata:
+    aliases:
+    - greatest
+    - highest
+    - largest
+    - max
+    - maximum
+    - most
+    label_rules: []
+    applicable_types:
+      column:
+      - numeric
+      - text
+      - date
+      - timestamp
+  binder:
+    args:
+    - column
+    returns_type: any
+    class: aggregate
+    clause: select
+    applicable_types: &id011
+      column:
+      - any
+    label_rules: &id012 []
+    surfaces: []
+    compatibility:
+      total_compatible_columns: 16
+      per_table_compatible_counts:
+        users: 7
+        sales: 6
+        regions: 3
+      has_any_compat: true
+distinct:
+  entity_type: sql_actions
+  metadata:
+    aliases:
+    - distinct
+    - unique
+    - unique values of
+    label_rules:
+    - not id
+    applicable_types:
+      column:
+      - any
+  binder:
+    args:
+    - column
+    returns_type: any
+    class: scalar
+    clause: select
+    applicable_types: &id013
+      column:
+      - any
+    label_rules: &id014 []
+    surfaces: []
+    compatibility:
+      total_compatible_columns: 16
+      per_table_compatible_counts:
+        users: 7
+        sales: 6
+        regions: 3
+      has_any_compat: true
+order_by_asc:
+  entity_type: sql_actions
+  metadata:
+    aliases:
+    - in ascending order
+    - order by
+    - order by ascending
+    - sort by
+    - sort by ascending
+    label_rules: []
+    applicable_types:
+      column:
+      - any
+  binder:
+    args:
+    - column
+    returns_type: any
+    class: ordering
+    clause: order_by
+    applicable_types: &id015
+      column:
+      - any
+    label_rules: &id016 []
+    surfaces: []
+    compatibility:
+      total_compatible_columns: 16
+      per_table_compatible_counts:
+        users: 7
+        sales: 6
+        regions: 3
+      has_any_compat: true
+order_by_desc:
+  entity_type: sql_actions
+  metadata:
+    aliases:
+    - in descending order
+    - order by descending
+    - sort by descending
+    label_rules: []
+    applicable_types:
+      column:
+      - any
+  binder:
+    args:
+    - column
+    returns_type: any
+    class: ordering
+    clause: order_by
+    applicable_types: &id017
+      column:
+      - any
+    label_rules: &id018 []
+    surfaces: []
+    compatibility:
+      total_compatible_columns: 16
+      per_table_compatible_counts:
+        users: 7
+        sales: 6
+        regions: 3
+      has_any_compat: true
+group_by:
+  entity_type: sql_actions
+  metadata:
+    aliases:
+    - group by
+    - grouped by
+    label_rules: []
+    applicable_types:
+      column:
+      - any
+  binder:
+    args:
+    - column
+    returns_type: any
+    class: scalar
+    clause: select
+    applicable_types: &id019
+      column:
+      - any
+    label_rules: &id020 []
+    surfaces: []
+    compatibility:
+      total_compatible_columns: 16
+      per_table_compatible_counts:
+        users: 7
+        sales: 6
+        regions: 3
+      has_any_compat: true
+having:
+  entity_type: sql_actions
+  metadata:
+    aliases:
+    - having
+    - with
+    label_rules: []
+    applicable_types:
+      condition:
+      - any
+  binder:
+    args:
+    - column
+    returns_type: any
+    class: scalar
+    clause: select
+    applicable_types: &id021
+      column:
+      - any
+    label_rules: &id022 []
+    surfaces: []
+    compatibility:
+      total_compatible_columns: 16
+      per_table_compatible_counts:
+        users: 7
+        sales: 6
+        regions: 3
+      has_any_compat: true
+limit:
+  entity_type: sql_actions
+  metadata:
+    aliases:
+    - first
+    - limit
+    - only
+    - top
+    label_rules: []
+    applicable_types:
+      value:
+      - numeric
+  binder:
+    args:
+    - column
+    returns_type: any
+    class: scalar
+    clause: select
+    applicable_types: &id023
+      column:
+      - any
+    label_rules: &id024 []
+    surfaces: []
+    compatibility:
+      total_compatible_columns: 16
+      per_table_compatible_counts:
+        users: 7
+        sales: 6
+        regions: 3
+      has_any_compat: true
+extract:
+  entity_type: sql_actions
+  metadata:
+    aliases:
+    - extract
+    - get the
+    label_rules: []
+    applicable_types:
+      part:
+      - any
+      column:
+      - date
+      - timestamp
+  binder:
+    args:
+    - column
+    returns_type: any
+    class: scalar
+    clause: select
+    applicable_types: &id025
+      column:
+      - any
+    label_rules: &id026 []
+    surfaces: []
+    compatibility:
+      total_compatible_columns: 16
+      per_table_compatible_counts:
+        users: 7
+        sales: 6
+        regions: 3
+      has_any_compat: true
+length:
+  entity_type: sql_actions
+  metadata:
+    aliases:
+    - character count
+    - length in
+    - length of
+    - string length
+    label_rules: []
+    applicable_types:
+      column:
+      - text
+  binder:
+    args:
+    - column
+    returns_type: any
+    class: scalar
+    clause: select
+    applicable_types: &id027
+      column:
+      - any
+    label_rules: &id028 []
+    surfaces: []
+    compatibility:
+      total_compatible_columns: 16
+      per_table_compatible_counts:
+        users: 7
+        sales: 6
+        regions: 3
+      has_any_compat: true
+concat:
+  entity_type: sql_actions
+  metadata:
+    aliases:
+    - combine
+    - concat
+    - concatenate
+    - join
+    label_rules: []
+    applicable_types:
+      column1:
+      - text
+      column2:
+      - text
+  binder:
+    args:
+    - column
+    returns_type: any
+    class: scalar
+    clause: select
+    applicable_types: &id029
+      column:
+      - any
+    label_rules: &id030 []
+    surfaces: []
+    compatibility:
+      total_compatible_columns: 16
+      per_table_compatible_counts:
+        users: 7
+        sales: 6
+        regions: 3
+      has_any_compat: true
+cast:
+  entity_type: sql_actions
+  metadata:
+    aliases:
+    - cast
+    - change type
+    - convert
+    label_rules: []
+    applicable_types:
+      column:
+      - any
+      to_type:
+      - any
+  binder:
+    args:
+    - column
+    returns_type: any
+    class: scalar
+    clause: select
+    applicable_types: &id031
+      column:
+      - any
+    label_rules: &id032 []
+    surfaces: []
+    compatibility:
+      total_compatible_columns: 16
+      per_table_compatible_counts:
+        users: 7
+        sales: 6
+        regions: 3
+      has_any_compat: true
+st_perimeter:
+  entity_type: sql_actions
+  metadata:
+    aliases:
+    - boundary length
+    - length of boundary
+    - outline length
+    - perimeter
+    label_rules:
+    - postgis
+    applicable_types:
+      geom:
+      - geometry_polygon
+      - geography_polygon
+  binder:
+    args:
+    - column
+    returns_type: float
+    class: spatial
+    clause: both
+    applicable_types: &id033
+      column:
+      - geometry
+      - geography
+      - any
+    label_rules: &id034
+    - postgis
+    surfaces: []
+    compatibility:
+      total_compatible_columns: 0
+      per_table_compatible_counts:
+        users: 0
+        sales: 0
+        regions: 0
+      has_any_compat: false
+st_distance:
+  entity_type: sql_actions
+  metadata:
+    aliases:
+    - distance
+    - distance between
+    - how far
+    - separation of
+    label_rules:
+    - postgis
+    applicable_types:
+      geom1:
+      - geometry_point
+      - geography_point
+      - geometry_linestring
+      - geography_linestring
+      - geometry_polygon
+      - geography_polygon
+      geom2:
+      - geometry_point
+      - geography_point
+      - geometry_linestring
+      - geography_linestring
+      - geometry_polygon
+      - geography_polygon
+  binder:
+    args:
+    - column
+    returns_type: float
+    class: spatial
+    clause: both
+    applicable_types: &id035
+      column:
+      - geometry
+      - geography
+      - any
+    label_rules: &id036
+    - postgis
+    surfaces: []
+    compatibility:
+      total_compatible_columns: 0
+      per_table_compatible_counts:
+        users: 0
+        sales: 0
+        regions: 0
+      has_any_compat: false
+st_intersects:
+  entity_type: sql_actions
+  metadata:
+    aliases:
+    - intersects
+    - overlaps with
+    label_rules:
+    - postgis
+    applicable_types:
+      geom1:
+      - geometry
+      - geography
+      - geometry_point
+      - geometry_linestring
+      - geometry_polygon
+      geom2:
+      - geometry
+      - geography
+      - geometry_point
+      - geometry_linestring
+      - geometry_polygon
+  binder:
+    args:
+    - column
+    returns_type: bool
+    class: spatial
+    clause: both
+    applicable_types: &id037
+      column:
+      - geometry
+      - geography
+      - any
+    label_rules: &id038
+    - postgis
+    surfaces: []
+    compatibility:
+      total_compatible_columns: 0
+      per_table_compatible_counts:
+        users: 0
+        sales: 0
+        regions: 0
+      has_any_compat: false
+st_area:
+  entity_type: sql_actions
+  metadata:
+    aliases:
+    - area
+    - area of
+    - size of
+    - surface area
+    label_rules:
+    - postgis
+    applicable_types:
+      geom:
+      - geometry_polygon
+      - geography_polygon
+  binder:
+    args:
+    - column
+    returns_type: float
+    class: spatial
+    clause: both
+    applicable_types: &id039
+      column:
+      - geometry
+      - geography
+      - any
+    label_rules: &id040
+    - postgis
+    surfaces: []
+    compatibility:
+      total_compatible_columns: 0
+      per_table_compatible_counts:
+        users: 0
+        sales: 0
+        regions: 0
+      has_any_compat: false
+st_length:
+  entity_type: sql_actions
+  metadata:
+    aliases:
+    - distance along
+    - distance of
+    - length along
+    - length of
+    - line length
+    - path length
+    label_rules:
+    - postgis
+    applicable_types:
+      geom:
+      - geometry_linestring
+      - geography_linestring
+  binder:
+    args:
+    - column
+    returns_type: float
+    class: spatial
+    clause: both
+    applicable_types: &id041
+      column:
+      - geometry
+      - geography
+      - any
+    label_rules: &id042
+    - postgis
+    surfaces: []
+    compatibility:
+      total_compatible_columns: 0
+      per_table_compatible_counts:
+        users: 0
+        sales: 0
+        regions: 0
+      has_any_compat: false
+st_x:
+  entity_type: sql_actions
+  metadata:
+    aliases:
+    - lon
+    - longitude
+    - x coordinate
+    - x pos
+    label_rules:
+    - postgis
+    applicable_types:
+      point:
+      - geometry_point
+      - geography_point
+  binder:
+    args:
+    - column
+    returns_type: float
+    class: spatial
+    clause: both
+    applicable_types: &id043
+      column:
+      - geometry
+      - geography
+      - any
+    label_rules: &id044
+    - postgis
+    surfaces: []
+    compatibility:
+      total_compatible_columns: 0
+      per_table_compatible_counts:
+        users: 0
+        sales: 0
+        regions: 0
+      has_any_compat: false
+st_y:
+  entity_type: sql_actions
+  metadata:
+    aliases:
+    - lat
+    - latitude
+    - y coordinate
+    - y pos
+    label_rules:
+    - postgis
+    applicable_types:
+      point:
+      - geometry_point
+      - geography_point
+  binder:
+    args:
+    - column
+    returns_type: float
+    class: spatial
+    clause: both
+    applicable_types: &id045
+      column:
+      - geometry
+      - geography
+      - any
+    label_rules: &id046
+    - postgis
+    surfaces: []
+    compatibility:
+      total_compatible_columns: 0
+      per_table_compatible_counts:
+        users: 0
+        sales: 0
+        regions: 0
+      has_any_compat: false
+st_within:
+  entity_type: sql_actions
+  metadata:
+    aliases:
+    - contained in
+    - inside
+    - is inside
+    - is within
+    - within
+    label_rules:
+    - postgis
+    applicable_types:
+      geom1:
+      - geometry
+      - geography
+      - geometry_point
+      - geometry_linestring
+      - geometry_polygon
+      geom2:
+      - geometry
+      - geography
+      - geometry_point
+      - geometry_linestring
+      - geometry_polygon
+  binder:
+    args:
+    - column
+    returns_type: bool
+    class: spatial
+    clause: both
+    applicable_types: &id047
+      column:
+      - geometry
+      - geography
+      - any
+    label_rules: &id048
+    - postgis
+    surfaces: []
+    compatibility:
+      total_compatible_columns: 0
+      per_table_compatible_counts:
+        users: 0
+        sales: 0
+        regions: 0
+      has_any_compat: false
+st_contains:
+  entity_type: sql_actions
+  metadata:
+    aliases:
+    - contains
+    - encloses
+    - surrounds
+    label_rules:
+    - postgis
+    applicable_types:
+      geom1:
+      - geometry
+      - geography
+      - geometry_polygon
+      geom2:
+      - geometry
+      - geography
+      - geometry_point
+      - geometry_linestring
+      - geometry_polygon
+  binder:
+    args:
+    - column
+    returns_type: bool
+    class: spatial
+    clause: both
+    applicable_types: &id049
+      column:
+      - geometry
+      - geography
+      - any
+    label_rules: &id050
+    - postgis
+    surfaces: []
+    compatibility:
+      total_compatible_columns: 0
+      per_table_compatible_counts:
+        users: 0
+        sales: 0
+        regions: 0
+      has_any_compat: false
+st_geometrytype:
+  entity_type: sql_actions
+  metadata:
+    aliases:
+    - geometry type
+    - shape type
+    - type of geometry
+    - what kind of shape
+    label_rules:
+    - postgis
+    applicable_types:
+      geom:
+      - geometry
+      - geography
+      - geometry_point
+      - geometry_linestring
+      - geometry_polygon
+  binder:
+    args:
+    - column
+    returns_type: text
+    class: spatial
+    clause: both
+    applicable_types: &id051
+      column:
+      - geometry
+      - geography
+      - any
+    label_rules: &id052
+    - postgis
+    surfaces: []
+    compatibility:
+      total_compatible_columns: 0
+      per_table_compatible_counts:
+        users: 0
+        sales: 0
+        regions: 0
+      has_any_compat: false
+st_buffer:
+  entity_type: sql_actions
+  metadata:
+    aliases:
+    - area around
+    - buffer
+    - buffer around
+    - expand by
+    label_rules:
+    - postgis
+    applicable_types:
+      geom:
+      - geometry
+      - geography
+      - geometry_point
+      - geometry_linestring
+      - geometry_polygon
+      radius:
+      - numeric
+  binder:
+    args:
+    - column
+    returns_type: geometry
+    class: spatial
+    clause: both
+    applicable_types: &id053
+      column:
+      - geometry
+      - geography
+      - any
+    label_rules: &id054
+    - postgis
+    surfaces: []
+    compatibility:
+      total_compatible_columns: 0
+      per_table_compatible_counts:
+        users: 0
+        sales: 0
+        regions: 0
+      has_any_compat: false
+st_union:
+  entity_type: sql_actions
+  metadata:
+    aliases:
+    - combine
+    - merge
+    - union
+    - union of
+    label_rules:
+    - postgis
+    applicable_types:
+      geom_collection:
+      - geometry
+      - geography
+      - geometry_point
+      - geometry_linestring
+      - geometry_polygon
+  binder:
+    args:
+    - column
+    returns_type: geometry
+    class: spatial
+    clause: both
+    applicable_types: &id055
+      column:
+      - geometry
+      - geography
+      - any
+    label_rules: &id056
+    - postgis
+    surfaces: []
+    compatibility:
+      total_compatible_columns: 0
+      per_table_compatible_counts:
+        users: 0
+        sales: 0
+        regions: 0
+      has_any_compat: false
+st_centroid:
+  entity_type: sql_actions
+  metadata:
+    aliases:
+    - center
+    - center point
+    - centroid
+    - geometric center
+    label_rules:
+    - postgis
+    applicable_types:
+      geom:
+      - geometry
+      - geography
+      - geometry_point
+      - geometry_linestring
+      - geometry_polygon
+  binder:
+    args:
+    - column
+    returns_type: geometry
+    class: spatial
+    clause: both
+    applicable_types: &id057
+      column:
+      - geometry
+      - geography
+      - any
+    label_rules: &id058
+    - postgis
+    surfaces: []
+    compatibility:
+      total_compatible_columns: 0
+      per_table_compatible_counts:
+        users: 0
+        sales: 0
+        regions: 0
+      has_any_compat: false
+st_simplify:
+  entity_type: sql_actions
+  metadata:
+    aliases:
+    - generalize
+    - simplify
+    - simplify shape
+    label_rules:
+    - postgis
+    applicable_types:
+      geom:
+      - geometry_linestring
+      - geometry_polygon
+      - geography_linestring
+      - geography_polygon
+      tolerance:
+      - numeric
+  binder:
+    args:
+    - column
+    returns_type: geometry
+    class: spatial
+    clause: both
+    applicable_types: &id059
+      column:
+      - geometry
+      - geography
+      - any
+    label_rules: &id060
+    - postgis
+    surfaces: []
+    compatibility:
+      total_compatible_columns: 0
+      per_table_compatible_counts:
+        users: 0
+        sales: 0
+        regions: 0
+      has_any_compat: false
+st_touches:
+  entity_type: sql_actions
+  metadata:
+    aliases:
+    - borders
+    - is adjacent to
+    - touches
+    label_rules:
+    - postgis
+    applicable_types:
+      geom1:
+      - geometry
+      - geography
+      - geometry_point
+      - geometry_linestring
+      - geometry_polygon
+      geom2:
+      - geometry
+      - geography
+      - geometry_point
+      - geometry_linestring
+      - geometry_polygon
+  binder:
+    args:
+    - column
+    returns_type: bool
+    class: spatial
+    clause: both
+    applicable_types: &id061
+      column:
+      - geometry
+      - geography
+      - any
+    label_rules: &id062
+    - postgis
+    surfaces: []
+    compatibility:
+      total_compatible_columns: 0
+      per_table_compatible_counts:
+        users: 0
+        sales: 0
+        regions: 0
+      has_any_compat: false
+st_crosses:
+  entity_type: sql_actions
+  metadata:
+    aliases:
+    - crosses
+    - goes across
+    label_rules:
+    - postgis
+    applicable_types:
+      geom1:
+      - geometry
+      - geography
+      - geometry_linestring
+      - geometry_polygon
+      geom2:
+      - geometry
+      - geography
+      - geometry_linestring
+  binder:
+    args:
+    - column
+    returns_type: bool
+    class: spatial
+    clause: both
+    applicable_types: &id063
+      column:
+      - geometry
+      - geography
+      - any
+    label_rules: &id064
+    - postgis
+    surfaces: []
+    compatibility:
+      total_compatible_columns: 0
+      per_table_compatible_counts:
+        users: 0
+        sales: 0
+        regions: 0
+      has_any_compat: false
+st_spatial_index:
+  entity_type: sql_actions
+  metadata:
+    aliases:
+    - spatial index
+    label_rules:
+    - postgis
+    applicable_types:
+      geom1:
+      - geometry
+      - geography
+      - geometry_point
+      - geometry_linestring
+      - geometry_polygon
+      geom2:
+      - geometry
+      - geography
+      - geometry_point
+      - geometry_linestring
+      - geometry_polygon
+  binder:
+    args:
+    - column
+    returns_type: any
+    class: scalar
+    clause: select
+    applicable_types: &id065
+      column:
+      - any
+    label_rules: &id066 []
+    surfaces: []
+    compatibility:
+      total_compatible_columns: 16
+      per_table_compatible_counts:
+        users: 7
+        sales: 6
+        regions: 3
+      has_any_compat: true
+st_distance_operator:
+  entity_type: sql_actions
+  metadata:
+    aliases:
+    - closest
+    - closest to
+    - nearest
+    label_rules:
+    - postgis
+    applicable_types:
+      geom1:
+      - geometry
+      - geography
+      - geometry_point
+      - geometry_linestring
+      - geometry_polygon
+      geom2:
+      - geometry
+      - geography
+      - geometry_point
+      - geometry_linestring
+      - geometry_polygon
+  binder:
+    args:
+    - column
+    returns_type: any
+    class: scalar
+    clause: select
+    applicable_types: &id067
+      column:
+      - any
+    label_rules: &id068 []
+    surfaces: []
+    compatibility:
+      total_compatible_columns: 16
+      per_table_compatible_counts:
+        users: 7
+        sales: 6
+        regions: 3
+      has_any_compat: true
+st_transform:
+  entity_type: sql_actions
+  metadata:
+    aliases:
+    - convert coordinate system
+    - reproject
+    - transform
+    label_rules:
+    - postgis
+    applicable_types:
+      geom:
+      - geometry
+      - geography
+      - geometry_point
+      - geometry_linestring
+      - geometry_polygon
+      srid:
+      - numeric
+  binder:
+    args:
+    - column
+    returns_type: geometry
+    class: spatial
+    clause: both
+    applicable_types: &id069
+      column:
+      - geometry
+      - geography
+      - any
+    label_rules: &id070
+    - postgis
+    surfaces: []
+    compatibility:
+      total_compatible_columns: 0
+      per_table_compatible_counts:
+        users: 0
+        sales: 0
+        regions: 0
+      has_any_compat: false
+equal:
+  entity_type: comparison_operators
+  metadata:
+    aliases:
+    - '='
+    - ==
+    - equal to
+    - equals
+    - exactly
+    - is
+    - is exactly
+    - is the same as
+not_equal:
+  entity_type: comparison_operators
+  metadata:
+    aliases:
+    - '!='
+    - <>
+    - does not equal
+    - is not
+    - is not equal to
+    - isn't
+greater_than:
+  entity_type: comparison_operators
+  metadata:
+    aliases:
+    - '>'
+    - above
+    - exceeds
+    - is greater than
+    - more than
+    - over
+less_than:
+  entity_type: comparison_operators
+  metadata:
+    aliases:
+    - <
+    - below
+    - is less than
+    - smaller than
+    - under
+greater_than_or_equal:
+  entity_type: comparison_operators
+  metadata:
+    aliases:
+    - '>='
+    - at least
+    - is at least
+    - is greater than or equal to
+    - not less than
+less_than_or_equal:
+  entity_type: comparison_operators
+  metadata:
+    aliases:
+    - <=
+    - at most
+    - is at most
+    - is less than or equal to
+    - not more than
+    - up to
+between:
+  entity_type: comparison_operators
+  metadata:
+    aliases:
+    - between
+    - in the range of
+    - is between
+in:
+  entity_type: comparison_operators
+  metadata:
+    aliases:
+    - in
+    - is in
+    - is one of
+    - one of
+like:
+  entity_type: comparison_operators
+  metadata:
+    aliases:
+    - ends with
+    - like
+    - matches
+    - starts with
+is_null:
+  entity_type: comparison_operators
+  metadata:
+    aliases:
+    - has no value
+    - is empty
+    - is missing
+    - is null
+is_not_null:
+  entity_type: comparison_operators
+  metadata:
+    aliases:
+    - exists
+    - has a value
+    - is not empty
+    - is not null
+    - is present
+_skip:
+  entity_type: filler_words
+  metadata:
+    aliases:
+    - _skip
+a:
+  entity_type: filler_words
+  metadata:
+    aliases:
+    - a
+all:
+  entity_type: filler_words
+  metadata:
+    aliases:
+    - all
+an:
+  entity_type: filler_words
+  metadata:
+    aliases:
+    - an
+any:
+  entity_type: filler_words
+  metadata:
+    aliases:
+    - any
+are:
+  entity_type: filler_words
+  metadata:
+    aliases:
+    - are
+for:
+  entity_type: filler_words
+  metadata:
+    aliases:
+    - for
+me:
+  entity_type: filler_words
+  metadata:
+    aliases:
+    - me
+some:
+  entity_type: filler_words
+  metadata:
+    aliases:
+    - some
+that:
+  entity_type: filler_words
+  metadata:
+    aliases:
+    - that
+the:
+  entity_type: filler_words
+  metadata:
+    aliases:
+    - the
+their:
+  entity_type: filler_words
+  metadata:
+    aliases:
+    - their
+which:
+  entity_type: filler_words
+  metadata:
+    aliases:
+    - which
+who:
+  entity_type: filler_words
+  metadata:
+    aliases:
+    - who
+with:
+  entity_type: filler_words
+  metadata:
+    aliases:
+    - with
+of:
+  entity_type: prepositions
+  metadata:
+    aliases:
+    - of
+from:
+  entity_type: prepositions
+  metadata:
+    aliases:
+    - from
+_on:
+  entity_type: prepositions
+  metadata:
+    aliases:
+    - _on
+'on':
+  entity_type: prepositions
+  metadata:
+    aliases:
+    - 'on'
+at:
+  entity_type: prepositions
+  metadata:
+    aliases:
+    - at
+belonging to:
+  entity_type: prepositions
+  metadata:
+    aliases:
+    - belonging to
+and:
+  entity_type: logical_operators
+  metadata:
+    aliases:
+    - and
+'&&':
+  entity_type: logical_operators
+  metadata:
+    aliases:
+    - '&&'
+or:
+  entity_type: logical_operators
+  metadata:
+    aliases:
+    - or
+'||':
+  entity_type: logical_operators
+  metadata:
+    aliases:
+    - '||'
+not:
+  entity_type: logical_operators
+  metadata:
+    aliases:
+    - not
+'!':
+  entity_type: logical_operators
+  metadata:
+    aliases:
+    - '!'
+select:
+  entity_type: select_verbs
+  metadata:
+    aliases:
+    - select
+display:
+  entity_type: select_verbs
+  metadata:
+    aliases:
+    - display
+fetch:
+  entity_type: select_verbs
+  metadata:
+    aliases:
+    - fetch
+find:
+  entity_type: select_verbs
+  metadata:
+    aliases:
+    - find
+get:
+  entity_type: select_verbs
+  metadata:
+    aliases:
+    - get
+give me:
+  entity_type: select_verbs
+  metadata:
+    aliases:
+    - give me
+list:
+  entity_type: select_verbs
+  metadata:
+    aliases:
+    - list
+retrieve:
+  entity_type: select_verbs
+  metadata:
+    aliases:
+    - retrieve
+show:
+  entity_type: select_verbs
+  metadata:
+    aliases:
+    - show
+tell me:
+  entity_type: select_verbs
+  metadata:
+    aliases:
+    - tell me
+what:
+  entity_type: select_verbs
+  metadata:
+    aliases:
+    - what
+_binder_meta:
+  connectors:
+  - name: OF
+    surface: of
+  - name: FROM
+    surface: from
+  - name: AND
+    surface: and
+  - name: COMMA
+    surface: ','
+  - name: OR
+    surface: or
+_relationships:
+  fk: &id001
+  - from_col: users.user_id
+    to_table: users
+    confidence: 0.8
+    reason: name_match
+  - from_col: sales.sale_id
+    to_table: sales
+    confidence: 0.8
+    reason: name_match
+  - from_col: sales.user_id
+    to_table: users
+    confidence: 0.8
+    reason: name_match
+  - from_col: regions.region_id
+    to_table: regions
+    confidence: 0.8
+    reason: name_match
+_diagnostics: &id072
+  fk_inferred:
+  - *id001
+  phase_e.function_coverage:
+  - considered: 34
+    zeros: 17
+    zero_examples:
+    - st_perimeter
+    - st_distance
+    - st_intersects
+    - st_area
+    - st_length
+    - st_x
+    - st_y
+    - st_within
+    - st_contains
+    - st_geometrytype
+    - st_buffer
+    - st_union
+    - st_centroid
+    - st_simplify
+    - st_touches
+    ignored_irrelevant: []
+    present_families:
+    - bool
+    - date
+    - datetime
+    - float
+    - geometry
+    - int
+    - text
+  phase_g.schema:
+  - empty_tables: []
+    orphan_columns: []
+    bad_column_owners: []
+    table_column_counts:
+      users: 7
+      sales: 6
+      regions: 3
+  phase_g.aliases:
+  - missing_in_vocab:
+    - account
+    - client
+    - customer
+    - order
+    - order by
+    - purchase
+    - region
+    - sale
+    - sort by
+    - transaction
+    - user
+    - zone
+    ambiguous_in_graph:
+    - account number
+    - amount
+    - area
+    - client id
+    - combine
+    - customer id
+    - length of
+    - perimeter
+    - user id
+    - user identifier
+    - user ids
+    - user number
+    - user_id
+    - with
+    unknown_vocab_targets:
+    - "user_id\u2192user_id"
+    - "username\u2192username"
+    - "handle\u2192username"
+    - "login\u2192username"
+    - "usernames\u2192username"
+    - "age\u2192age"
+    - "ages\u2192age"
+    - "balance\u2192balance"
+    - "balances\u2192balance"
+    - "credit\u2192balance"
+    - "funds\u2192balance"
+    - "is_active\u2192is_active"
+    - "status\u2192is_active"
+    - "last_login\u2192last_login"
+    - "location\u2192location"
+    - "coordinates\u2192location"
+    - "locations\u2192location"
+    - "place\u2192location"
+    - "position\u2192location"
+    - "sale_id\u2192sale_id"
+    - "product_name\u2192product_name"
+    - "item\u2192product_name"
+    - "product\u2192product_name"
+    - "sale_date\u2192sale_date"
+    - "quantity\u2192quantity"
+    - "quantities\u2192quantity"
+    - "price\u2192price"
+    - "charge\u2192price"
+    - "cost\u2192price"
+    - "prices\u2192price"
+    - "value\u2192price"
+    - "region_id\u2192region_id"
+    - "name\u2192name"
+    - "identifier\u2192name"
+    - "label\u2192name"
+    - "names\u2192name"
+    - "title\u2192name"
+    - "boundaries\u2192boundaries"
+    - "border\u2192boundaries"
+    - "boundary\u2192boundaries"
+    - "geometry\u2192boundaries"
+    - "outline\u2192boundaries"
+    - "shape\u2192boundaries"
+    - "items\u2192product_name"
+    - "values\u2192price"
+    - "account number\u2192user_id"
+    - "client id\u2192user_id"
+    - "customer id\u2192user_id"
+    - "user id\u2192user_id"
+    - "user identifier\u2192user_id"
+    - "user ids\u2192user_id"
+    - "user number\u2192user_id"
+    - "account name\u2192username"
+    - "user name\u2192username"
+    - "user names\u2192username"
+    - "years old\u2192age"
+    - "account balance\u2192balance"
+    - "amount\u2192balance"
+    - "amount\u2192price"
+    - "account status\u2192is_active"
+    - "active status\u2192is_active"
+    - "is active\u2192is_active"
+    - "is actives\u2192is_active"
+    - "last access\u2192last_login"
+    - "last active date\u2192last_login"
+    - "last login\u2192last_login"
+    - "last logins\u2192last_login"
+    - "last signed in\u2192last_login"
+    - "most recent login\u2192last_login"
+    - "geo location\u2192location"
+    - "geographic coordinates\u2192location"
+    - "order id\u2192sale_id"
+    - "order number\u2192sale_id"
+    - "purchase id\u2192sale_id"
+    - "sale id\u2192sale_id"
+    - "sale ids\u2192sale_id"
+    - "transaction id\u2192sale_id"
+    - "item name\u2192product_name"
+    - "item sold\u2192product_name"
+    - "product name\u2192product_name"
+    - "product names\u2192product_name"
+    - "order date\u2192sale_date"
+    - "purchase date\u2192sale_date"
+    - "sale date\u2192sale_date"
+    - "sale dates\u2192sale_date"
+    - "transaction date\u2192sale_date"
+    - "when it was sold\u2192sale_date"
+    - "amount sold\u2192quantity"
+    - "item count\u2192quantity"
+    - "number of items\u2192quantity"
+    - "number sold\u2192quantity"
+    - "how much\u2192price"
+    - "area id\u2192region_id"
+    - "region id\u2192region_id"
+    - "region ids\u2192region_id"
+    - "region number\u2192region_id"
+    - "zone id\u2192region_id"
+    - "area shape\u2192boundaries"
+    - "perimeter\u2192boundaries"
+    - "client ids\u2192user_id"
+    - "customer ids\u2192user_id"
+    - "account names\u2192username"
+    - "last active dates\u2192last_login"
+    - "order ids\u2192sale_id"
+    - "purchase ids\u2192sale_id"
+    - "transaction ids\u2192sale_id"
+    - "item names\u2192product_name"
+    - "order dates\u2192sale_date"
+    - "purchase dates\u2192sale_date"
+    - "transaction dates\u2192sale_date"
+    - "area ids\u2192region_id"
+    - "zone ids\u2192region_id"
+    alias_fanout:
+      account: 1
+      accounts: 1
+      client: 1
+      clients: 1
+      customer: 1
+      customers: 1
+      people: 1
+      user: 1
+      users: 1
+      account number: 2
+      client id: 2
+      customer id: 2
+      user id: 2
+      user identifier: 2
+      user ids: 2
+      user number: 2
+      user_id: 2
+      account name: 1
+      handle: 1
+      login: 1
+      user name: 1
+      user names: 1
+      username: 1
+      usernames: 1
+      age: 1
+      ages: 1
+      years old: 1
+      account balance: 1
+      amount: 2
+      balance: 1
+      balances: 1
+      credit: 1
+      funds: 1
+      account status: 1
+      active status: 1
+      is active: 1
+      is actives: 1
+      is_active: 1
+      status: 1
+      last access: 1
+      last active date: 1
+      last login: 1
+      last logins: 1
+      last signed in: 1
+      last_login: 1
+      most recent login: 1
+      coordinates: 1
+      geo location: 1
+      geographic coordinates: 1
+      location: 1
+      locations: 1
+      place: 1
+      position: 1
+      order: 1
+      orders: 1
+      purchase: 1
+      purchases: 1
+      sale: 1
+      sales: 1
+      transaction: 1
+      transactions: 1
+      order id: 1
+      order number: 1
+      purchase id: 1
+      sale id: 1
+      sale ids: 1
+      sale_id: 1
+      transaction id: 1
+      item: 1
+      item name: 1
+      item sold: 1
+      product: 1
+      product name: 1
+      product names: 1
+      product_name: 1
+      order date: 1
+      purchase date: 1
+      sale date: 1
+      sale dates: 1
+      sale_date: 1
+      transaction date: 1
+      when it was sold: 1
+      amount sold: 1
+      item count: 1
+      number of items: 1
+      number sold: 1
+      quantities: 1
+      quantity: 1
+      charge: 1
+      cost: 1
+      how much: 1
+      price: 1
+      prices: 1
+      value: 1
+      area: 2
+      areas: 1
+      district: 1
+      region: 1
+      regions: 1
+      territory: 1
+      zone: 1
+      zones: 1
+      area id: 1
+      region id: 1
+      region ids: 1
+      region number: 1
+      region_id: 1
+      zone id: 1
+      identifier: 1
+      label: 1
+      name: 1
+      names: 1
+      title: 1
+      area shape: 1
+      border: 1
+      boundaries: 1
+      boundary: 1
+      geometry: 1
+      outline: 1
+      perimeter: 2
+      shape: 1
+      count: 1
+      how many: 1
+      number: 1
+      number of: 1
+      quantity of: 1
+      total number of: 1
+      aggregate: 1
+      sum: 1
+      sum of: 1
+      total: 1
+      total amount of: 1
+      total of: 1
+      average: 1
+      average of: 1
+      avg: 1
+      mean: 1
+      bottom: 1
+      least: 1
+      lowest: 1
+      min: 1
+      minimum: 1
+      smallest: 1
+      greatest: 1
+      highest: 1
+      largest: 1
+      max: 1
+      maximum: 1
+      most: 1
+      distinct: 1
+      unique: 1
+      unique values of: 1
+      in ascending order: 1
+      order by: 1
+      order by ascending: 1
+      sort by: 1
+      sort by ascending: 1
+      in descending order: 1
+      order by descending: 1
+      sort by descending: 1
+      group by: 1
+      grouped by: 1
+      having: 1
+      with: 2
+      first: 1
+      limit: 1
+      only: 1
+      top: 1
+      extract: 1
+      get the: 1
+      character count: 1
+      length in: 1
+      length of: 2
+      string length: 1
+      combine: 2
+      concat: 1
+      concatenate: 1
+      join: 1
+      cast: 1
+      change type: 1
+      convert: 1
+      boundary length: 1
+      length of boundary: 1
+      outline length: 1
+      distance: 1
+      distance between: 1
+      how far: 1
+      separation of: 1
+      intersects: 1
+      overlaps with: 1
+      area of: 1
+      size of: 1
+      surface area: 1
+      distance along: 1
+      distance of: 1
+      length along: 1
+      line length: 1
+      path length: 1
+      lon: 1
+      longitude: 1
+      x coordinate: 1
+      x pos: 1
+      lat: 1
+      latitude: 1
+      y coordinate: 1
+      y pos: 1
+      contained in: 1
+      inside: 1
+      is inside: 1
+      is within: 1
+      within: 1
+      contains: 1
+      encloses: 1
+      surrounds: 1
+      geometry type: 1
+      shape type: 1
+      type of geometry: 1
+      what kind of shape: 1
+      area around: 1
+      buffer: 1
+      buffer around: 1
+      expand by: 1
+      merge: 1
+      union: 1
+      union of: 1
+      center: 1
+      center point: 1
+      centroid: 1
+      geometric center: 1
+      generalize: 1
+      simplify: 1
+      simplify shape: 1
+      borders: 1
+      is adjacent to: 1
+      touches: 1
+      crosses: 1
+      goes across: 1
+      spatial index: 1
+      closest: 1
+      closest to: 1
+      nearest: 1
+      convert coordinate system: 1
+      reproject: 1
+      transform: 1
+      '=': 1
+      ==: 1
+      equal to: 1
+      equals: 1
+      exactly: 1
+      is: 1
+      is exactly: 1
+      is the same as: 1
+      '!=': 1
+      <>: 1
+      does not equal: 1
+      is not: 1
+      is not equal to: 1
+      isn't: 1
+      '>': 1
+      above: 1
+      exceeds: 1
+      is greater than: 1
+      more than: 1
+      over: 1
+      <: 1
+      below: 1
+      is less than: 1
+      smaller than: 1
+      under: 1
+      '>=': 1
+      at least: 1
+      is at least: 1
+      is greater than or equal to: 1
+      not less than: 1
+      <=: 1
+      at most: 1
+      is at most: 1
+      is less than or equal to: 1
+      not more than: 1
+      up to: 1
+      between: 1
+      in the range of: 1
+      is between: 1
+      in: 1
+      is in: 1
+      is one of: 1
+      one of: 1
+      ends with: 1
+      like: 1
+      matches: 1
+      starts with: 1
+      has no value: 1
+      is empty: 1
+      is missing: 1
+      is null: 1
+      exists: 1
+      has a value: 1
+      is not empty: 1
+      is not null: 1
+      is present: 1
+      _skip: 1
+      a: 1
+      all: 1
+      an: 1
+      any: 1
+      are: 1
+      for: 1
+      me: 1
+      some: 1
+      that: 1
+      the: 1
+      their: 1
+      which: 1
+      who: 1
+      of: 1
+      from: 1
+      _on: 1
+      'on': 1
+      at: 1
+      belonging to: 1
+      and: 1
+      '&&': 1
+      or: 1
+      '||': 1
+      not: 1
+      '!': 1
+      select: 1
+      display: 1
+      fetch: 1
+      find: 1
+      get: 1
+      give me: 1
+      list: 1
+      retrieve: 1
+      show: 1
+      tell me: 1
+      what: 1
+  phase_g.function_compat:
+  - zero_compat_functions:
+    - st_perimeter
+    - st_distance
+    - st_intersects
+    - st_area
+    - st_length
+    - st_x
+    - st_y
+    - st_within
+    - st_contains
+    - st_geometrytype
+    - st_buffer
+    - st_union
+    - st_centroid
+    - st_simplify
+    - st_touches
+    - st_crosses
+    - st_transform
+    low_compat_functions: []
+    compat_counts:
+      count: 16
+      sum: 16
+      avg: 16
+      min: 16
+      max: 16
+      distinct: 16
+      order_by_asc: 16
+      order_by_desc: 16
+      group_by: 16
+      having: 16
+      limit: 16
+      extract: 16
+      length: 16
+      concat: 16
+      cast: 16
+      st_perimeter: 0
+      st_distance: 0
+      st_intersects: 0
+      st_area: 0
+      st_length: 0
+      st_x: 0
+      st_y: 0
+      st_within: 0
+      st_contains: 0
+      st_geometrytype: 0
+      st_buffer: 0
+      st_union: 0
+      st_centroid: 0
+      st_simplify: 0
+      st_touches: 0
+      st_crosses: 0
+      st_spatial_index: 16
+      st_distance_operator: 16
+      st_transform: 0
+  phase_g.policy:
+  - connectors_missing_or_wrong: []
+    reserved_alias_misuse:
+    - '!'
+    - '!='
+    - '&&'
+    - <
+    - <=
+    - <>
+    - '='
+    - ==
+    - '>'
+    - '>='
+    - '||'
+  phase_i.roundtrip_report:
+  - successes: 100
+    failures: 0
+    rate: 1.0
+    top_error_buckets: []
+    examples: []
+    tested: 100
+  phase_i.feasibility_report:
+  - ok: true
+    sampled: 34
+    problems: []
+  phase_i.negatives_report:
+  - ok: true
+    tested: 8
+    passed_both: []
+  phase_i.cross_artifacts_log:
+  - "[C1] Canonical \u2192 Binder \u2192 Grammar Roundtrip\n  - Success Rate: 100%\
+    \ (100/100)\n\n[C2] Binder SQL Feasibility (Light)\n  - PASS: All sampled functions\
+    \ are trivially fillable or have no template.\n\n[C3] Negative Canonical Tests\n\
+    \  - PASS: Negatives blocked as expected (binder and/or parser)."
+  phase_j.random_report:
+    ok: true
+    success_rate: 0.94
+    successes: 94
+    failures: 6
+    categories:
+      binder_fail: 5
+      parser_fail: 1
+    samples:
+    - canonical: select st_within, st_touches of users.location, and users.last_login
+        from users
+      messy: select st_within, st_touches of users.location, and users.last_login
+        from users
+      stats:
+        input: select st_within, st_touches of users.location, and users.last_login
+          from users
+        normalizer_candidates: 1
+        bound_candidates: 0
+        parsed_candidates: 0
+        fail_category: binder_fail
+        binder_errors:
+        - incompatible arg 'users.last_login' for function 'st_touches'
+        parse_errors: []
+        picked: null
+        binder_debug: []
+        sanitized_diffs: 1
+    - canonical: select st_centroid of regions.boundaries, regions.name, and regions.name
+        from regions
+      messy: select st_centroid of regions.boundaries, regions.name, and regions.name
+        from regions
+      stats:
+        input: select st_centroid of regions.boundaries, regions.name, and regions.name
+          from regions
+        normalizer_candidates: 1
+        bound_candidates: 0
+        parsed_candidates: 0
+        fail_category: binder_fail
+        binder_errors:
+        - incompatible arg 'regions.name' for function 'st_centroid'
+        parse_errors: []
+        picked: null
+        binder_debug: []
+        sanitized_diffs: 1
+    - canonical: select users.age, max of users.username, and st_length of users.location
+        from users
+      messy: select users.age, max of users.username, and st_length of users.location
+        from users
+      stats:
+        input: select users.age, max of users.username, and st_length of users.location
+          from users
+        normalizer_candidates: 1
+        bound_candidates: 1
+        parsed_candidates: 0
+        fail_category: parser_fail
+        binder_errors: []
+        parse_errors:
+        - "No terminal matches 's' in the current parser context, at line 1 col 48\n\
+          \nusers.age and max of users.username and st_length of users.location from\
+          \ users\n                                        ^\nExpected one of: \n\t\
+          * COLUMN\n"
+        picked: null
+        binder_debug: []
+        sanitized_diffs: 1
+    seed: null
+    params:
+      num_phrases: 100
+      success_threshold: 0.9
+      max_candidates: 50
+      binder_mode:
+        strict_types: true
+        coerce_types: false
+        allow_ordering_funcs_in_args: false
+  phase_j.lossiness_report:
+    histogram:
+      1: 96
+      2: 4
+    fail_categories:
+      binder_fail: 8
+      parser_fail: 1
+    params:
+      num_phrases: 100
+      max_candidates: 50
+      seed: null
+  phase_j.integration_log:
+  - "--- Running I1: Random Canonical \u2192 De-Norm \u2192 Norm \u2192 Bind \u2192\
+    \ Parse ---\n  - Success Rate: 94% (94/100)\n  - Failure categories:\n    * binder_fail:\
+    \ 5\n    * parser_fail: 1\n  - Sample failures:\n    - Canonical: select st_within,\
+    \ st_touches of users.location, and users.last_login from users\n      Messy:\
+    \     select st_within, st_touches of users.location, and users.last_login from\
+    \ users\n      Stats:     {'input': 'select st_within, st_touches of users.location,\
+    \ and users.last_login from users', 'normalizer_candidates': 1, 'bound_candidates':\
+    \ 0, 'parsed_candidates': 0, 'fail_category': 'binder_fail', 'binder_errors':\
+    \ [\"incompatible arg 'users.last_login' for function 'st_touches'\"], 'parse_errors':\
+    \ [], 'picked': None, 'binder_debug': [], 'sanitized_diffs': 1}\n    - Canonical:\
+    \ select st_centroid of regions.boundaries, regions.name, and regions.name from\
+    \ regions\n      Messy:     select st_centroid of regions.boundaries, regions.name,\
+    \ and regions.name from regions\n      Stats:     {'input': 'select st_centroid\
+    \ of regions.boundaries, regions.name, and regions.name from regions', 'normalizer_candidates':\
+    \ 1, 'bound_candidates': 0, 'parsed_candidates': 0, 'fail_category': 'binder_fail',\
+    \ 'binder_errors': [\"incompatible arg 'regions.name' for function 'st_centroid'\"\
+    ], 'parse_errors': [], 'picked': None, 'binder_debug': [], 'sanitized_diffs':\
+    \ 1}\n    - Canonical: select users.age, max of users.username, and st_length\
+    \ of users.location from users\n      Messy:     select users.age, max of users.username,\
+    \ and st_length of users.location from users\n      Stats:     {'input': 'select\
+    \ users.age, max of users.username, and st_length of users.location from users',\
+    \ 'normalizer_candidates': 1, 'bound_candidates': 1, 'parsed_candidates': 0, 'fail_category':\
+    \ 'parser_fail', 'binder_errors': [], 'parse_errors': [\"No terminal matches 's'\
+    \ in the current parser context, at line 1 col 48\\n\\nusers.age and max of users.username\
+    \ and st_length of users.location from users\\n                              \
+    \          ^\\nExpected one of: \\n\\t* COLUMN\\n\"], 'picked': None, 'binder_debug':\
+    \ [], 'sanitized_diffs': 1}\n--- Running I2: Lossiness & Coverage Audit ---\n\
+    \  - Normalizer candidate count histogram:\n      1: 96\n      2: 4\n  - Failure\
+    \ categories:\n    * binder_fail: 8\n    * parser_fail: 1"
+_policy:
+  connectors: &id071
+    OF: of
+    FROM: from
+    AND: and
+    COMMA: ','
+    OR: or
+  reserved_tokens:
+  - '!'
+  - '!='
+  - '&&'
+  - ','
+  - <
+  - <=
+  - <>
+  - '='
+  - ==
+  - '>'
+  - '>='
+  - '||'
+  preposition_purity:
+    bare_prepositions:
+    - at
+    - from
+    - in
+    - of
+    - 'on'
+  domain_preferences:
+    contains:
+    - like
+    - st_contains
+    intersects: &id002
+    - st_spatial_index
+    - st_intersects
+    overlaps: *id002
+  of_surface_canonicals:
+  - avg
+  - distinct
+  - st_distance
+  - sum
+  arg_function_deny:
+  - order_by_asc
+  - order_by_desc
+  canonicals:
+    tables:
+    - regions
+    - sales
+    - users
+    columns:
+    - regions.boundaries
+    - regions.name
+    - regions.region_id
+    - sales.price
+    - sales.product_name
+    - sales.quantity
+    - sales.sale_date
+    - sales.sale_id
+    - sales.user_id
+    - users.age
+    - users.balance
+    - users.is_active
+    - users.last_login
+    - users.location
+    - users.user_id
+    - users.username
+    functions:
+    - avg
+    - cast
+    - concat
+    - count
+    - distinct
+    - extract
+    - group_by
+    - having
+    - length
+    - limit
+    - max
+    - min
+    - order_by_asc
+    - order_by_desc
+    - st_area
+    - st_buffer
+    - st_centroid
+    - st_contains
+    - st_crosses
+    - st_distance
+    - st_distance_operator
+    - st_geometrytype
+    - st_intersects
+    - st_length
+    - st_perimeter
+    - st_simplify
+    - st_spatial_index
+    - st_touches
+    - st_transform
+    - st_union
+    - st_within
+    - st_x
+    - st_y
+    - sum
+    comparison_operators:
+    - between
+    - equal
+    - greater_than
+    - greater_than_or_equal
+    - in
+    - is_not_null
+    - is_null
+    - less_than
+    - less_than_or_equal
+    - like
+    - not_equal
+  vocabulary:
+    deterministic_keys:
+    - '!'
+    - '!='
+    - '&&'
+    - <
+    - <=
+    - <>
+    - '='
+    - ==
+    - '>'
+    - '>='
+    - _on
+    - _skip
+    - a
+    - above
+    - accounts
+    - age
+    - ages
+    - aggregate
+    - all
+    - an
+    - and
+    - any
+    - are
+    - area
+    - areas
+    - at
+    - average
+    - avg
+    - balance
+    - balances
+    - belonging to
+    - below
+    - between
+    - border
+    - borders
+    - bottom
+    - boundaries
+    - boundary
+    - buffer
+    - cast
+    - center
+    - centroid
+    - charge
+    - clients
+    - closest
+    - concat
+    - concatenate
+    - contains
+    - convert
+    - coordinates
+    - cost
+    - count
+    - credit
+    - crosses
+    - customers
+    - display
+    - distance
+    - distinct
+    - district
+    - encloses
+    - equal
+    - equals
+    - exactly
+    - exceeds
+    - exists
+    - extract
+    - fetch
+    - find
+    - first
+    - for
+    - from
+    - funds
+    - generalize
+    - geometry
+    - get
+    - give me
+    - greater_than
+    - greater_than_or_equal
+    - greatest
+    - group_by
+    - handle
+    - having
+    - highest
+    - identifier
+    - in
+    - inside
+    - intersects
+    - is
+    - is_active
+    - is_not_null
+    - is_null
+    - isn't
+    - item
+    - items
+    - join
+    - label
+    - largest
+    - last_login
+    - lat
+    - latitude
+    - least
+    - length
+    - less_than
+    - less_than_or_equal
+    - like
+    - limit
+    - list
+    - location
+    - locations
+    - login
+    - lon
+    - longitude
+    - lowest
+    - matches
+    - max
+    - maximum
+    - me
+    - mean
+    - merge
+    - min
+    - minimum
+    - most
+    - name
+    - names
+    - nearest
+    - not
+    - not_equal
+    - number
+    - of
+    - 'on'
+    - only
+    - or
+    - order_by_asc
+    - order_by_desc
+    - orders
+    - outline
+    - over
+    - people
+    - place
+    - position
+    - price
+    - prices
+    - product
+    - product_name
+    - purchases
+    - quantities
+    - quantity
+    - region_id
+    - regions
+    - reproject
+    - retrieve
+    - sale_date
+    - sale_id
+    - sales
+    - select
+    - shape
+    - show
+    - simplify
+    - smallest
+    - some
+    - st_area
+    - st_buffer
+    - st_centroid
+    - st_contains
+    - st_crosses
+    - st_distance
+    - st_distance_operator
+    - st_geometrytype
+    - st_intersects
+    - st_length
+    - st_perimeter
+    - st_simplify
+    - st_spatial_index
+    - st_touches
+    - st_transform
+    - st_union
+    - st_within
+    - st_x
+    - st_y
+    - status
+    - sum
+    - surrounds
+    - tell me
+    - territory
+    - that
+    - the
+    - their
+    - title
+    - top
+    - total
+    - touches
+    - transactions
+    - transform
+    - under
+    - union
+    - unique
+    - user_id
+    - username
+    - usernames
+    - users
+    - value
+    - values
+    - what
+    - which
+    - who
+    - with
+    - within
+    - zones
+    - '||'
+    non_deterministic_keys:
+    - account balance
+    - account name
+    - account names
+    - account number
+    - account status
+    - active status
+    - amount
+    - amount sold
+    - area around
+    - area id
+    - area ids
+    - area of
+    - area shape
+    - at least
+    - at most
+    - average of
+    - belonging to
+    - boundary length
+    - buffer around
+    - center point
+    - change type
+    - character count
+    - client id
+    - client ids
+    - closest to
+    - combine
+    - contained in
+    - convert coordinate system
+    - customer id
+    - customer ids
+    - distance along
+    - distance between
+    - distance of
+    - does not equal
+    - ends with
+    - equal to
+    - expand by
+    - geo location
+    - geographic coordinates
+    - geometric center
+    - geometry type
+    - get the
+    - give me
+    - goes across
+    - group by
+    - grouped by
+    - has a value
+    - has no value
+    - how far
+    - how many
+    - how much
+    - in ascending order
+    - in descending order
+    - in the range of
+    - is active
+    - is actives
+    - is adjacent to
+    - is at least
+    - is at most
+    - is between
+    - is empty
+    - is exactly
+    - is greater than
+    - is greater than or equal to
+    - is in
+    - is inside
+    - is less than
+    - is less than or equal to
+    - is missing
+    - is not
+    - is not empty
+    - is not equal to
+    - is not null
+    - is null
+    - is one of
+    - is present
+    - is the same as
+    - is within
+    - item count
+    - item name
+    - item names
+    - item sold
+    - last access
+    - last active date
+    - last active dates
+    - last login
+    - last logins
+    - last signed in
+    - length along
+    - length in
+    - length of
+    - length of boundary
+    - line length
+    - more than
+    - most recent login
+    - not less than
+    - not more than
+    - number of
+    - number of items
+    - number sold
+    - one of
+    - order by ascending
+    - order by descending
+    - order date
+    - order dates
+    - order id
+    - order ids
+    - order number
+    - outline length
+    - overlaps with
+    - path length
+    - perimeter
+    - product name
+    - product names
+    - purchase date
+    - purchase dates
+    - purchase id
+    - purchase ids
+    - quantity of
+    - region id
+    - region ids
+    - region number
+    - sale date
+    - sale dates
+    - sale id
+    - sale ids
+    - separation of
+    - shape type
+    - simplify shape
+    - size of
+    - smaller than
+    - sort by ascending
+    - sort by descending
+    - spatial index
+    - starts with
+    - string length
+    - sum of
+    - surface area
+    - tell me
+    - total amount of
+    - total number of
+    - total of
+    - transaction date
+    - transaction dates
+    - transaction id
+    - transaction ids
+    - type of geometry
+    - union of
+    - unique values of
+    - up to
+    - user id
+    - user identifier
+    - user ids
+    - user name
+    - user names
+    - user number
+    - what kind of shape
+    - when it was sold
+    - with
+    - x coordinate
+    - x pos
+    - y coordinate
+    - y pos
+    - years old
+    - zone id
+    - zone ids
+  symbolic_alias_map:
+    '||':
+    - '||'
+    '>=':
+    - greater_than_or_equal
+    '&&':
+    - '&&'
+    '!':
+    - '!'
+    <>:
+    - not_equal
+    <=:
+    - less_than_or_equal
+    '!=':
+    - not_equal
+    <:
+    - less_than
+    '>':
+    - greater_than
+    '=':
+    - equal
+    ==:
+    - equal
+_artifacts:
+  vocabulary:
+    deterministic_aliases:
+      users: users
+      accounts: users
+      clients: users
+      customers: users
+      people: users
+      user_id: user_id
+      username: users.username
+      handle: username
+      login: username
+      usernames: username
+      age: users.age
+      ages: age
+      balance: users.balance
+      balances: balance
+      credit: balance
+      funds: balance
+      is_active: users.is_active
+      status: is_active
+      last_login: users.last_login
+      location: users.location
+      coordinates: location
+      locations: location
+      place: location
+      position: location
+      sales: sales
+      orders: sales
+      purchases: sales
+      transactions: sales
+      sale_id: sales.sale_id
+      product_name: sales.product_name
+      item: product_name
+      product: product_name
+      sale_date: sales.sale_date
+      quantity: sales.quantity
+      quantities: quantity
+      price: sales.price
+      charge: price
+      cost: price
+      prices: price
+      value: price
+      regions: regions
+      area: st_area
+      areas: regions
+      district: regions
+      territory: regions
+      zones: regions
+      region_id: regions.region_id
+      name: regions.name
+      identifier: name
+      label: name
+      names: name
+      title: name
+      boundaries: regions.boundaries
+      border: boundaries
+      boundary: boundaries
+      geometry: boundaries
+      outline: boundaries
+      shape: boundaries
+      count: count
+      number: count
+      sum: sum
+      aggregate: sum
+      total: sum
+      avg: avg
+      average: avg
+      mean: avg
+      min: min
+      bottom: min
+      least: min
+      lowest: min
+      minimum: min
+      smallest: min
+      max: max
+      greatest: max
+      highest: max
+      largest: max
+      maximum: max
+      most: max
+      distinct: distinct
+      unique: distinct
+      order_by_asc: order_by_asc
+      order_by_desc: order_by_desc
+      group_by: group_by
+      having: having
+      limit: limit
+      first: limit
+      only: limit
+      top: limit
+      extract: extract
+      length: length
+      concat: concat
+      concatenate: concat
+      join: concat
+      cast: cast
+      convert: cast
+      st_perimeter: st_perimeter
+      st_distance: st_distance
+      distance: st_distance
+      st_intersects: st_intersects
+      intersects: st_intersects
+      st_area: st_area
+      st_length: st_length
+      st_x: st_x
+      lon: st_x
+      longitude: st_x
+      st_y: st_y
+      lat: st_y
+      latitude: st_y
+      st_within: st_within
+      inside: st_within
+      within: st_within
+      st_contains: st_contains
+      contains: st_contains
+      encloses: st_contains
+      surrounds: st_contains
+      st_geometrytype: st_geometrytype
+      st_buffer: st_buffer
+      buffer: st_buffer
+      st_union: st_union
+      merge: st_union
+      union: st_union
+      st_centroid: st_centroid
+      center: st_centroid
+      centroid: st_centroid
+      st_simplify: st_simplify
+      generalize: st_simplify
+      simplify: st_simplify
+      st_touches: st_touches
+      borders: st_touches
+      touches: st_touches
+      st_crosses: st_crosses
+      crosses: st_crosses
+      st_spatial_index: st_spatial_index
+      st_distance_operator: st_distance_operator
+      closest: st_distance_operator
+      nearest: st_distance_operator
+      st_transform: st_transform
+      reproject: st_transform
+      transform: st_transform
+      equal: equal
+      '=': equal
+      ==: equal
+      equals: equal
+      exactly: equal
+      is: equal
+      not_equal: not_equal
+      '!=': not_equal
+      <>: not_equal
+      isn't: not_equal
+      greater_than: greater_than
+      '>': greater_than
+      above: greater_than
+      exceeds: greater_than
+      over: greater_than
+      less_than: less_than
+      <: less_than
+      below: less_than
+      under: less_than
+      greater_than_or_equal: greater_than_or_equal
+      '>=': greater_than_or_equal
+      less_than_or_equal: less_than_or_equal
+      <=: less_than_or_equal
+      between: between
+      like: like
+      matches: like
+      is_null: is_null
+      is_not_null: is_not_null
+      exists: is_not_null
+      _skip: ''
+      a: ''
+      all: ''
+      an: ''
+      any: ''
+      are: ''
+      for: ''
+      me: ''
+      some: ''
+      that: ''
+      the: ''
+      their: ''
+      which: ''
+      who: ''
+      of: of
+      from: from
+      _on: _on
+      'on': 'on'
+      at: at
+      and: and
+      '&&': '&&'
+      or: or
+      '||': '||'
+      not: not
+      '!': '!'
+      select: select
+      display: display
+      fetch: fetch
+      find: find
+      get: get
+      list: list
+      retrieve: retrieve
+      show: show
+      what: what
+      items: product_name
+      values: price
+      in: in
+      with: ''
+      belonging to: belonging to
+      give me: give me
+      tell me: tell me
+      users.user_id: users.user_id
+      users.username: users.username
+      sales.user_id: sales.user_id
+      sales.sale_date: sales.sale_date
+      regions.name: regions.name
+      users.age: users.age
+      regions.region_id: regions.region_id
+      users.last_login: users.last_login
+      sales.price: sales.price
+      users.balance: users.balance
+      sales.product_name: sales.product_name
+      users.location: users.location
+      sales.quantity: sales.quantity
+      users.is_active: users.is_active
+      regions.boundaries: regions.boundaries
+      sales.sale_id: sales.sale_id
+    non_deterministic_aliases:
+      account number:
+      - user_id
+      client id:
+      - user_id
+      customer id:
+      - user_id
+      user id:
+      - user_id
+      user identifier:
+      - user_id
+      user ids:
+      - user_id
+      user number:
+      - user_id
+      account name:
+      - username
+      user name:
+      - username
+      user names:
+      - username
+      years old:
+      - age
+      account balance:
+      - balance
+      amount:
+      - balance
+      - price
+      account status:
+      - is_active
+      active status:
+      - is_active
+      is active:
+      - is_active
+      is actives:
+      - is_active
+      last access:
+      - last_login
+      last active date:
+      - last_login
+      last login:
+      - last_login
+      last logins:
+      - last_login
+      last signed in:
+      - last_login
+      most recent login:
+      - last_login
+      geo location:
+      - location
+      geographic coordinates:
+      - location
+      order id:
+      - sale_id
+      order number:
+      - sale_id
+      purchase id:
+      - sale_id
+      sale id:
+      - sale_id
+      sale ids:
+      - sale_id
+      transaction id:
+      - sale_id
+      item name:
+      - product_name
+      item sold:
+      - product_name
+      product name:
+      - product_name
+      product names:
+      - product_name
+      order date:
+      - sale_date
+      purchase date:
+      - sale_date
+      sale date:
+      - sale_date
+      sale dates:
+      - sale_date
+      transaction date:
+      - sale_date
+      when it was sold:
+      - sale_date
+      amount sold:
+      - quantity
+      item count:
+      - quantity
+      number of items:
+      - quantity
+      number sold:
+      - quantity
+      how much:
+      - price
+      area id:
+      - region_id
+      region id:
+      - region_id
+      region ids:
+      - region_id
+      region number:
+      - region_id
+      zone id:
+      - region_id
+      area shape:
+      - boundaries
+      perimeter:
+      - boundaries
+      - st_perimeter
+      how many:
+      - count
+      number of:
+      - count
+      quantity of:
+      - count
+      total number of:
+      - count
+      sum of:
+      - sum
+      total amount of:
+      - sum
+      total of:
+      - sum
+      average of:
+      - avg
+      unique values of:
+      - distinct
+      in ascending order:
+      - order_by_asc
+      order by ascending:
+      - order_by_asc
+      sort by ascending:
+      - order_by_asc
+      in descending order:
+      - order_by_desc
+      order by descending:
+      - order_by_desc
+      sort by descending:
+      - order_by_desc
+      group by:
+      - group_by
+      grouped by:
+      - group_by
+      with:
+      - having
+      - with
+      get the:
+      - extract
+      character count:
+      - length
+      length in:
+      - length
+      length of:
+      - length
+      - st_length
+      string length:
+      - length
+      combine:
+      - concat
+      - st_union
+      change type:
+      - cast
+      boundary length:
+      - st_perimeter
+      length of boundary:
+      - st_perimeter
+      outline length:
+      - st_perimeter
+      distance between:
+      - st_distance
+      how far:
+      - st_distance
+      separation of:
+      - st_distance
+      overlaps with:
+      - st_intersects
+      area of:
+      - st_area
+      size of:
+      - st_area
+      surface area:
+      - st_area
+      distance along:
+      - st_length
+      distance of:
+      - st_length
+      length along:
+      - st_length
+      line length:
+      - st_length
+      path length:
+      - st_length
+      x coordinate:
+      - st_x
+      x pos:
+      - st_x
+      y coordinate:
+      - st_y
+      y pos:
+      - st_y
+      contained in:
+      - st_within
+      is inside:
+      - st_within
+      is within:
+      - st_within
+      geometry type:
+      - st_geometrytype
+      shape type:
+      - st_geometrytype
+      type of geometry:
+      - st_geometrytype
+      what kind of shape:
+      - st_geometrytype
+      area around:
+      - st_buffer
+      buffer around:
+      - st_buffer
+      expand by:
+      - st_buffer
+      union of:
+      - st_union
+      center point:
+      - st_centroid
+      geometric center:
+      - st_centroid
+      simplify shape:
+      - st_simplify
+      is adjacent to:
+      - st_touches
+      goes across:
+      - st_crosses
+      spatial index:
+      - st_spatial_index
+      closest to:
+      - st_distance_operator
+      convert coordinate system:
+      - st_transform
+      equal to:
+      - equal
+      is exactly:
+      - equal
+      is the same as:
+      - equal
+      does not equal:
+      - not_equal
+      is not:
+      - not_equal
+      is not equal to:
+      - not_equal
+      is greater than:
+      - greater_than
+      more than:
+      - greater_than
+      is less than:
+      - less_than
+      smaller than:
+      - less_than
+      at least:
+      - greater_than_or_equal
+      is at least:
+      - greater_than_or_equal
+      is greater than or equal to:
+      - greater_than_or_equal
+      not less than:
+      - greater_than_or_equal
+      at most:
+      - less_than_or_equal
+      is at most:
+      - less_than_or_equal
+      is less than or equal to:
+      - less_than_or_equal
+      not more than:
+      - less_than_or_equal
+      up to:
+      - less_than_or_equal
+      in the range of:
+      - between
+      is between:
+      - between
+      is in:
+      - in
+      is one of:
+      - in
+      one of:
+      - in
+      ends with:
+      - like
+      starts with:
+      - like
+      has no value:
+      - is_null
+      is empty:
+      - is_null
+      is missing:
+      - is_null
+      is null:
+      - is_null
+      has a value:
+      - is_not_null
+      is not empty:
+      - is_not_null
+      is not null:
+      - is_not_null
+      is present:
+      - is_not_null
+      belonging to:
+      - belonging to
+      give me:
+      - give me
+      tell me:
+      - tell me
+      client ids:
+      - user_id
+      customer ids:
+      - user_id
+      account names:
+      - username
+      last active dates:
+      - last_login
+      order ids:
+      - sale_id
+      purchase ids:
+      - sale_id
+      transaction ids:
+      - sale_id
+      item names:
+      - product_name
+      order dates:
+      - sale_date
+      purchase dates:
+      - sale_date
+      transaction dates:
+      - sale_date
+      area ids:
+      - region_id
+      zone ids:
+      - region_id
+    connectors:
+    - name: OF
+      surface: of
+    - name: FROM
+      surface: from
+    - name: AND
+      surface: and
+    - name: COMMA
+      surface: ','
+    - name: OR
+      surface: or
+    connector_map:
+      OF: of
+      FROM: from
+      AND: and
+      COMMA: ','
+      OR: or
+    _diagnostics:
+      generic_denied:
+      - order by
+      - sort by
+      prefix_collisions:
+      - alias: account
+        longer_keys:
+        - account balance
+        - account name
+        - account names
+        - account number
+        - account status
+        action: dropped_table_meaning
+      - alias: client
+        longer_keys:
+        - client id
+        - client ids
+        action: dropped_table_meaning
+      - alias: customer
+        longer_keys:
+        - customer id
+        - customer ids
+        action: dropped_table_meaning
+      - alias: user
+        longer_keys:
+        - user id
+        - user identifier
+        - user ids
+        - user name
+        - user names
+        - user number
+        action: dropped_table_meaning
+      - alias: order
+        longer_keys:
+        - order by ascending
+        - order by descending
+        - order date
+        - order dates
+        - order id
+        - order ids
+        - order number
+        action: dropped_table_meaning
+      - alias: purchase
+        longer_keys:
+        - purchase date
+        - purchase dates
+        - purchase id
+        - purchase ids
+        action: dropped_table_meaning
+      - alias: sale
+        longer_keys:
+        - sale date
+        - sale dates
+        - sale id
+        - sale ids
+        action: dropped_table_meaning
+      - alias: transaction
+        longer_keys:
+        - transaction date
+        - transaction dates
+        - transaction id
+        - transaction ids
+        action: dropped_table_meaning
+      - alias: area
+        longer_keys:
+        - area around
+        - area id
+        - area ids
+        - area of
+        - area shape
+        action: dropped_table_meaning
+      - alias: region
+        longer_keys:
+        - region id
+        - region ids
+        - region number
+        action: dropped_table_meaning
+      - alias: zone
+        longer_keys:
+        - zone id
+        - zone ids
+        action: dropped_table_meaning
+      preposition_conflicts:
+      - alias: in
+        dropped: 1
+      domain_conflicts: []
+      plural_added:
+      - from: client id
+        to: client ids
+      - from: customer id
+        to: customer ids
+      - from: account name
+        to: account names
+      - from: last active date
+        to: last active dates
+      - from: order id
+        to: order ids
+      - from: purchase id
+        to: purchase ids
+      - from: transaction id
+        to: transaction ids
+      - from: item
+        to: items
+      - from: item name
+        to: item names
+      - from: order date
+        to: order dates
+      - from: purchase date
+        to: purchase dates
+      - from: transaction date
+        to: transaction dates
+      - from: value
+        to: values
+      - from: area id
+        to: area ids
+      - from: zone id
+        to: zone ids
+      alias_collisions: []
+  binder:
+    templates: []
+    catalogs:
+      tables:
+      - users
+      - sales
+      - regions
+      columns:
+        users.user_id:
+          type: int
+          type_category: int
+          labels:
+          - id
+          table: users
+        users.username:
+          type: text
+          type_category: text
+          labels: []
+          table: users
+        users.age:
+          type: int
+          type_category: int
+          labels: []
+          table: users
+        users.balance:
+          type: float
+          type_category: float
+          labels: []
+          table: users
+        users.is_active:
+          type: bool
+          type_category: bool
+          labels:
+          - boolean_like
+          table: users
+        users.last_login:
+          type: datetime
+          type_category: datetime
+          labels: []
+          table: users
+        users.location:
+          type: int
+          type_category: int
+          labels:
+          - postgis
+          table: users
+        sales.sale_id:
+          type: int
+          type_category: int
+          labels:
+          - id
+          table: sales
+        sales.user_id:
+          type: int
+          type_category: int
+          labels:
+          - id
+          table: sales
+        sales.product_name:
+          type: text
+          type_category: text
+          labels: []
+          table: sales
+        sales.sale_date:
+          type: date
+          type_category: date
+          labels:
+          - date
+          table: sales
+        sales.quantity:
+          type: int
+          type_category: int
+          labels: []
+          table: sales
+        sales.price:
+          type: float
+          type_category: float
+          labels: []
+          table: sales
+        regions.region_id:
+          type: int
+          type_category: int
+          labels:
+          - id
+          - low_cardinality
+          table: regions
+        regions.name:
+          type: text
+          type_category: text
+          labels: []
+          table: regions
+        regions.boundaries:
+          type: geometry
+          type_category: geometry
+          labels:
+          - postgis
+          table: regions
+      functions:
+        count:
+          returns_type: int
+          class: aggregate
+          clause: select
+          args:
+          - column
+          surfaces: []
+          applicable_types: *id003
+          label_rules: *id004
+        sum:
+          returns_type: float
+          class: aggregate
+          clause: select
+          args:
+          - column
+          surfaces: []
+          applicable_types: *id005
+          label_rules: *id006
+        avg:
+          returns_type: float
+          class: aggregate
+          clause: select
+          args:
+          - column
+          surfaces: []
+          applicable_types: *id007
+          label_rules: *id008
+        min:
+          returns_type: any
+          class: aggregate
+          clause: select
+          args:
+          - column
+          surfaces: []
+          applicable_types: *id009
+          label_rules: *id010
+        max:
+          returns_type: any
+          class: aggregate
+          clause: select
+          args:
+          - column
+          surfaces: []
+          applicable_types: *id011
+          label_rules: *id012
+        distinct:
+          returns_type: any
+          class: scalar
+          clause: select
+          args:
+          - column
+          surfaces: []
+          applicable_types: *id013
+          label_rules: *id014
+        order_by_asc:
+          returns_type: any
+          class: ordering
+          clause: order_by
+          args:
+          - column
+          surfaces: []
+          applicable_types: *id015
+          label_rules: *id016
+        order_by_desc:
+          returns_type: any
+          class: ordering
+          clause: order_by
+          args:
+          - column
+          surfaces: []
+          applicable_types: *id017
+          label_rules: *id018
+        group_by:
+          returns_type: any
+          class: scalar
+          clause: select
+          args:
+          - column
+          surfaces: []
+          applicable_types: *id019
+          label_rules: *id020
+        having:
+          returns_type: any
+          class: scalar
+          clause: select
+          args:
+          - column
+          surfaces: []
+          applicable_types: *id021
+          label_rules: *id022
+        limit:
+          returns_type: any
+          class: scalar
+          clause: select
+          args:
+          - column
+          surfaces: []
+          applicable_types: *id023
+          label_rules: *id024
+        extract:
+          returns_type: any
+          class: scalar
+          clause: select
+          args:
+          - column
+          surfaces: []
+          applicable_types: *id025
+          label_rules: *id026
+        length:
+          returns_type: any
+          class: scalar
+          clause: select
+          args:
+          - column
+          surfaces: []
+          applicable_types: *id027
+          label_rules: *id028
+        concat:
+          returns_type: any
+          class: scalar
+          clause: select
+          args:
+          - column
+          surfaces: []
+          applicable_types: *id029
+          label_rules: *id030
+        cast:
+          returns_type: any
+          class: scalar
+          clause: select
+          args:
+          - column
+          surfaces: []
+          applicable_types: *id031
+          label_rules: *id032
+        st_perimeter:
+          returns_type: float
+          class: spatial
+          clause: both
+          args:
+          - column
+          surfaces: []
+          applicable_types: *id033
+          label_rules: *id034
+        st_distance:
+          returns_type: float
+          class: spatial
+          clause: both
+          args:
+          - column
+          surfaces: []
+          applicable_types: *id035
+          label_rules: *id036
+        st_intersects:
+          returns_type: bool
+          class: spatial
+          clause: both
+          args:
+          - column
+          surfaces: []
+          applicable_types: *id037
+          label_rules: *id038
+        st_area:
+          returns_type: float
+          class: spatial
+          clause: both
+          args:
+          - column
+          surfaces: []
+          applicable_types: *id039
+          label_rules: *id040
+        st_length:
+          returns_type: float
+          class: spatial
+          clause: both
+          args:
+          - column
+          surfaces: []
+          applicable_types: *id041
+          label_rules: *id042
+        st_x:
+          returns_type: float
+          class: spatial
+          clause: both
+          args:
+          - column
+          surfaces: []
+          applicable_types: *id043
+          label_rules: *id044
+        st_y:
+          returns_type: float
+          class: spatial
+          clause: both
+          args:
+          - column
+          surfaces: []
+          applicable_types: *id045
+          label_rules: *id046
+        st_within:
+          returns_type: bool
+          class: spatial
+          clause: both
+          args:
+          - column
+          surfaces: []
+          applicable_types: *id047
+          label_rules: *id048
+        st_contains:
+          returns_type: bool
+          class: spatial
+          clause: both
+          args:
+          - column
+          surfaces: []
+          applicable_types: *id049
+          label_rules: *id050
+        st_geometrytype:
+          returns_type: text
+          class: spatial
+          clause: both
+          args:
+          - column
+          surfaces: []
+          applicable_types: *id051
+          label_rules: *id052
+        st_buffer:
+          returns_type: geometry
+          class: spatial
+          clause: both
+          args:
+          - column
+          surfaces: []
+          applicable_types: *id053
+          label_rules: *id054
+        st_union:
+          returns_type: geometry
+          class: spatial
+          clause: both
+          args:
+          - column
+          surfaces: []
+          applicable_types: *id055
+          label_rules: *id056
+        st_centroid:
+          returns_type: geometry
+          class: spatial
+          clause: both
+          args:
+          - column
+          surfaces: []
+          applicable_types: *id057
+          label_rules: *id058
+        st_simplify:
+          returns_type: geometry
+          class: spatial
+          clause: both
+          args:
+          - column
+          surfaces: []
+          applicable_types: *id059
+          label_rules: *id060
+        st_touches:
+          returns_type: bool
+          class: spatial
+          clause: both
+          args:
+          - column
+          surfaces: []
+          applicable_types: *id061
+          label_rules: *id062
+        st_crosses:
+          returns_type: bool
+          class: spatial
+          clause: both
+          args:
+          - column
+          surfaces: []
+          applicable_types: *id063
+          label_rules: *id064
+        st_spatial_index:
+          returns_type: any
+          class: scalar
+          clause: select
+          args:
+          - column
+          surfaces: []
+          applicable_types: *id065
+          label_rules: *id066
+        st_distance_operator:
+          returns_type: any
+          class: scalar
+          clause: select
+          args:
+          - column
+          surfaces: []
+          applicable_types: *id067
+          label_rules: *id068
+        st_transform:
+          returns_type: geometry
+          class: spatial
+          clause: both
+          args:
+          - column
+          surfaces: []
+          applicable_types: *id069
+          label_rules: *id070
+      comparison_operators:
+        equal:
+          class: comparison_operator
+          surfaces: []
+        not_equal:
+          class: comparison_operator
+          surfaces: []
+        greater_than:
+          class: comparison_operator
+          surfaces: []
+        less_than:
+          class: comparison_operator
+          surfaces: []
+        greater_than_or_equal:
+          class: comparison_operator
+          surfaces: []
+        less_than_or_equal:
+          class: comparison_operator
+          surfaces: []
+        between:
+          class: comparison_operator
+          surfaces: []
+        in:
+          class: comparison_operator
+          surfaces: []
+        like:
+          class: comparison_operator
+          surfaces: []
+        is_null:
+          class: comparison_operator
+          surfaces: []
+        is_not_null:
+          class: comparison_operator
+          surfaces: []
+      connectors: *id071
+      punctuation:
+        ',': ','
+      _tables_detail:
+        users:
+          aliases:
+          - account
+          - accounts
+          - client
+          - clients
+          - customer
+          - customers
+          - people
+          - user
+          - users
+          columns:
+          - users.user_id
+          - users.username
+          - users.age
+          - users.balance
+          - users.is_active
+          - users.last_login
+          - users.location
+        sales:
+          aliases:
+          - order
+          - orders
+          - purchase
+          - purchases
+          - sale
+          - sales
+          - transaction
+          - transactions
+          columns:
+          - sales.sale_id
+          - sales.user_id
+          - sales.product_name
+          - sales.sale_date
+          - sales.quantity
+          - sales.price
+        regions:
+          aliases:
+          - area
+          - areas
+          - district
+          - region
+          - regions
+          - territory
+          - zone
+          - zones
+          columns:
+          - regions.region_id
+          - regions.name
+          - regions.boundaries
+    _diagnostics: *id072
+  grammar_text: "?query: \"select\" column_list _tbl_connector TABLE\n\n_tbl_connector:\
+    \ \"from\" | \"of\"\n\n?column_list: selectable\n            | selectable (\"\
+    ,\" selectable)+ (\",\"? \"and\" selectable)?\n            | selectable \"and\"\
+    \ selectable\n\n?selectable: COLUMN\n           | FUNCTION [\"of\" column_args]\n\
+    \ncolumn_args: COLUMN (\",\" COLUMN)* (\",\"? \"and\" COLUMN)?\n\nTABLE: \"regions\"\
+    \ | \"sales\" | \"users\"\nCOLUMN: \"regions.boundaries\" | \"regions.name\" |\
+    \ \"regions.region_id\" | \"sales.price\" | \"sales.product_name\" | \"sales.quantity\"\
+    \ | \"sales.sale_date\" | \"sales.sale_id\" | \"sales.user_id\" | \"users.age\"\
+    \ | \"users.balance\" | \"users.is_active\" | \"users.last_login\" | \"users.location\"\
+    \ | \"users.user_id\" | \"users.username\"\nFUNCTION: \"avg\" | \"cast\" | \"\
+    concat\" | \"count\" | \"distinct\" | \"extract\" | \"group_by\" | \"having\"\
+    \ | \"length\" | \"limit\" | \"max\" | \"min\" | \"order_by_asc\" | \"order_by_desc\"\
+    \ | \"st_area\" | \"st_buffer\" | \"st_centroid\" | \"st_contains\" | \"st_crosses\"\
+    \ | \"st_distance\" | \"st_distance_operator\" | \"st_geometrytype\" | \"st_intersects\"\
+    \ | \"st_length\" | \"st_perimeter\" | \"st_simplify\" | \"st_spatial_index\"\
+    \ | \"st_touches\" | \"st_transform\" | \"st_union\" | \"st_within\" | \"st_x\"\
+    \ | \"st_y\" | \"sum\"\n\n%import common.WS\n%ignore WS"
