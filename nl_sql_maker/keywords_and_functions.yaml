@@ -124,7 +124,12 @@ keywords:
         - who
   global_templates:
     select_template: "SELECT {columns} FROM {table} {constraints}"
-
+  connectors:
+      AND: "and"
+      OR: "or"
+      FROM: "from"
+      OF: "of"
+      COMMA: ","
 # SQL functions and templates
 sql_actions:
   count:

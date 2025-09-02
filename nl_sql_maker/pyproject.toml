@@ -24,6 +24,7 @@ dependencies = [
   "SQLAlchemy>=2.0",   # optional for future engines; stdlib sqlite3 is used in runtime
   "pysqlite3",         # switch to 'pysqlite3-binary' if build issues, optional on many systems
   "inflect>=7.0.0",
+  "neo4j",
 ]
 
 [project.optional-dependencies]
@@ -31,13 +32,13 @@ dev = [
   "pytest",
   "pytest-cov",
   "flake8",
+  "pathspec"
 ]
 
 # Console entry points
 [project.scripts]
-vbg_generate = "vbg_generate.vbg_pipeline:main"   # pipeline A→K
-vbg_runtime  = "vbg_runtime.cli:main"             # NL→SQL runtime CLI
-vbg_phrase_explorer = "vbg_tools.phrase_explorer:main"
+vbg_generate = "vbg_tools.graph_to_artifacts:main"
+vbg_runtime = "vbg_tools.graph_runtime:main"
 
 [tool.setuptools]
 package-dir = { "" = "src" }

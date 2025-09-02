@@ -1,8 +1,0 @@
-[C1] Canonical → Binder → Grammar Roundtrip
-  - Success Rate: 100% (100/100)
-
-[C2] Binder SQL Feasibility (Light)
-  - PASS: All sampled functions are trivially fillable or have no template.
-
-[C3] Negative Canonical Tests
-  - PASS: Negatives blocked as expected (binder and/or parser).
