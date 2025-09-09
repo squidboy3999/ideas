@@ -6,23 +6,35 @@ ART_DIR="${ARTIFACTS_DIR:-out}"
 VOCAB="${ART_DIR}/graph_vocabulary.yaml"
 BINDER="${ART_DIR}/graph_binder.yaml"
 GRAMMAR="${ART_DIR}/graph_grammar.lark"
-DB_PATH="_cli_test.db"
+DB_PATH="${DB_PATH:-test.db}"
 
 have_cmd() { command -v "$1" >/dev/null 2>&1; }
 
 # -------- JSON helpers --------
 is_json() {
+  # Accepts leading/trailing whitespace
   local s="$1"
   [[ "$s" =~ ^[[:space:]]*[\{\[] ]]
 }
 
 json_get_jq() { jq -r "$1"; }
 
+# Robust Python fallback: never crash on empty/invalid JSON; return sensible defaults
 json_get_py() {
   local key="$1"
   python3 -c '
 import sys, json
-data = json.loads(sys.stdin.read())
+
+raw = sys.stdin.read()
+if not raw or not raw.strip():
+    print("")
+    sys.exit(0)
+try:
+    data = json.loads(raw)
+except Exception:
+    print("")
+    sys.exit(0)
+
 expr = sys.argv[1]
 
 def dig(d, path):
@@ -44,14 +56,28 @@ elif expr == ".slots.table":
     v = dig(data, "slots") or {}; print((v or {}).get("table","") or "")
 elif expr == ".warnings[]?":
     for w in (data.get("warnings") or []): print(w)
+
+# Nested SQL helpers
+elif expr == ".sql.query":
+    v = dig(data, "sql")
+    print(v.get("query","") if isinstance(v, dict) else "")
+elif expr == ".sql.rowcount":
+    v = dig(data, "sql")
+    rc = 0
+    if isinstance(v, dict):
+        try: rc = int(v.get("rowcount") or 0)
+        except Exception: rc = 0
+    print(rc)
+
+# Legacy (kept for compatibility, not used by new tests)
 elif expr == ".sql":
-    v = dig(data, "sql"); print(v or "")
+    v = dig(data, "sql")
+    print(json.dumps(v) if isinstance(v, dict) else "")
 elif expr == ".rowcount":
     v = dig(data, "rowcount")
-    try:
-        print(int(v))
-    except Exception:
-        print(0)
+    try: print(int(v))
+    except Exception: print(0)
+
 else:
     print(json.dumps(data))
 ' "$key"
@@ -67,56 +93,6 @@ ensure_artifacts() {
   if [[ -f "$VOCAB" && -f "$BINDER" && -f "$GRAMMAR" ]]; then return 0; fi
   echo "Artifacts not found in ${ART_DIR}. Building with vbg_tools/graph_to_artifacts.py..."
   python3 vbg_tools/graph_to_artifacts.py
-}
-
-# -------- test DB builder (from binder) --------
-build_test_db() {
-  rm -f "$DB_PATH"
-  python3 - <<PY
-import sqlite3, yaml
-from pathlib import Path
-
-binder_path = Path("$BINDER")
-db_path = "$DB_PATH"
-
-binder = yaml.safe_load(binder_path.read_text()) or {}
-cats = (binder.get("catalogs") or {})
-cols = (cats.get("columns") or {})
-tables = (cats.get("tables") or {})
-
-# Collect columns per table
-cols_by_table = {t:{} for t in (tables.keys() if isinstance(tables, dict) else [])}
-for fqn, meta in cols.items():
-    if not isinstance(meta, dict): continue
-    t = meta.get("table")
-    c = meta.get("name")
-    if not t or not c: continue
-    cols_by_table.setdefault(t, {})
-    cols_by_table[t][c] = "TEXT"  # keep it simple for tests
-
-# Ensure each table has at least 1 column
-for t in list(cols_by_table.keys()):
-    if not cols_by_table[t]:
-        cols_by_table[t]["id"] = "TEXT"
-
-con = sqlite3.connect(db_path)
-try:
-    cur = con.cursor()
-    for t, cmap in cols_by_table.items():
-        defs = ", ".join([f'"{c}" {typ}' for c, typ in cmap.items()])
-        cur.execute(f'CREATE TABLE "{t}" ({defs})')
-        # Insert two simple rows per table
-        columns = list(cmap.keys())
-        placeholders = ", ".join(["?"]*len(columns))
-        cols_quoted = ", ".join(['"{}"'.format(c) for c in columns])
-        vals1 = [f"{c}_1" for c in columns]
-        vals2 = [f"{c}_2" for c in columns]
-        cur.execute(f'INSERT INTO "{t}" ({cols_quoted}) VALUES ({placeholders})', vals1)
-        cur.execute(f'INSERT INTO "{t}" ({cols_quoted}) VALUES ({placeholders})', vals2)
-    con.commit()
-finally:
-    con.close()
-PY
 }
 
 # -------- runtime resolver --------
@@ -138,8 +114,7 @@ resolve_runtime() {
   echo "ERROR: Could not find a JSON-capable runtime." >&2; exit 127
 }
 
-
-# -------- single-case runners --------
+# -------- single-case (parse-only) --------
 run_case() {
   local name="$1"; shift
   local utterance="$1"; shift
@@ -191,6 +166,7 @@ run_case() {
   if [[ $ok -eq 1 ]]; then echo "   ✅ PASS"; return 0; else echo "   ❌ FAIL"; return 1; fi
 }
 
+# -------- single-case (SQL) --------
 run_case_sql() {
   local name="$1"; shift
   local utterance="$1"; shift
@@ -219,23 +195,23 @@ run_case_sql() {
     return 1
   fi
 
-  local joined parse_ok table sql rowcount
+  local joined parse_ok table sql_query rowcount
   joined="$(printf '%s' "${out}" | json_get '.canonical_tokens | join(" ")' || true)"
   parse_ok="$(printf '%s' "${out}" | json_get '.parse_ok' || true)"
   table="$(printf '%s' "${out}" | json_get '.slots.table' || true)"
-  sql="$(printf '%s' "${out}" | json_get '.sql' || true)"
-  rowcount="$(printf '%s' "${out}" | json_get '.rowcount' || true)"
+  sql_query="$(printf '%s' "${out}" | json_get '.sql.query' || true)"
+  rowcount="$(printf '%s' "${out}" | json_get '.sql.rowcount' || true)"
 
   echo "   TOKENS: ${joined}"
   echo "   TABLE:  ${table:-<none>}"
   echo "   PARSE:  ${parse_ok}"
-  echo "   SQL:    ${sql:-<none>}"
+  echo "   SQL:    ${sql_query:-<none>}"
   echo "   ROWS:   ${rowcount:-0}"
 
   local ok=1
   if ! [[ "${joined}" =~ ${expect_regex} ]]; then echo "   ❌ Expected tokens ~ ${expect_regex}"; ok=0; fi
   if [[ "${parse_ok}" != "true" ]]; then echo "   ❌ Expected parse_ok=true"; ok=0; fi
-  if [[ -z "${sql}" ]]; then echo "   ❌ Expected SQL to be present"; ok=0; fi
+  if [[ -z "${sql_query}" ]]; then echo "   ❌ Expected SQL to be present"; ok=0; fi
   if [[ "${rowcount}" -lt "${min_rows}" ]]; then echo "   ❌ Expected at least ${min_rows} row(s)"; ok=0; fi
 
   local warnings
@@ -249,7 +225,8 @@ run_case_sql() {
 
 # -------- main --------
 ensure_artifacts
-build_test_db
+# Optional: build a temp DB from binder (you already have a real test.db generator)
+# build_test_db
 
 FAILS=0
 # Parse-only cases (unchanged)
@@ -258,7 +235,7 @@ run_case "select-from sales"   "list the sales"   "^SELECT[[:space:]]+FROM$" tru
 run_case "select-from regions" "display regions"  "^SELECT[[:space:]]+FROM$" true   || FAILS=$((FAILS+1))
 run_case "unrecognized text"   "blorp snorfle"    "^$"                         false || FAILS=$((FAILS+1))
 
-# SQL execution cases (new)
+# SQL execution cases
 run_case_sql "sql users basic"   "show users"        "^SELECT[[:space:]]+FROM$" 2 || FAILS=$((FAILS+1))
 run_case_sql "sql sales basic"   "list the sales"    "^SELECT[[:space:]]+FROM$" 2 || FAILS=$((FAILS+1))
 run_case_sql "sql regions basic" "display regions"   "^SELECT[[:space:]]+FROM$" 2 || FAILS=$((FAILS+1))

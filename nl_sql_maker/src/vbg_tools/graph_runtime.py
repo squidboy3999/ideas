@@ -5,8 +5,14 @@ import os, sys, re, json
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Tuple, Optional
-import sqlite3
+
 from lark import Lark, UnexpectedInput
+
+# NEW: SQL helpers
+from .sql_helpers import (
+    build_select_sql_from_slots,
+    execute_sqlite,
+)
 
 ART_DIR = Path(os.environ.get("ARTIFACTS_DIR", "out"))
 
@@ -14,65 +20,6 @@ ART_DIR = Path(os.environ.get("ARTIFACTS_DIR", "out"))
 VOCAB_PATH   = ART_DIR / "graph_vocabulary.yaml"
 BINDER_PATH  = ART_DIR / "graph_binder.yaml"
 GRAMMAR_PATH = ART_DIR / "graph_grammar.lark"
-# ----------------- SQL compilation & execution -----------------
-
-
-def table_columns_from_binder(binder_yaml: Dict[str, Any], table: str) -> List[str]:
-    """Return base column names for a given table from the binder. Falls back to empty list."""
-    catalogs = (binder_yaml.get("catalogs") or {})
-    columns = catalogs.get("columns") or {}
-    cols: List[str] = []
-    for fqn, cinfo in columns.items():
-        if isinstance(cinfo, dict) and cinfo.get("table") == table:
-            base = cinfo.get("name")
-            if isinstance(base, str) and base:
-                cols.append(base)
-    return sorted(set(cols))
-
-def build_select_sql(res: RuntimeResult, binder_yaml: Dict[str, Any], limit: int = 50) -> str:
-    """Build a simple SELECT for SQLite from resolved slots.
-    - SELECT <explicit columns if provided, else all table columns, else *>
-    - FROM "<table>"
-    - LIMIT <limit>
-    """
-    table = (res.slots or {}).get("table")
-    if not table:
-        raise ValueError("Cannot build SQL: no table was resolved.")
-
-    # Pick columns
-    resolved_cols: List[str] = []
-    for fqn in (res.slots or {}).get("columns", []):
-        # our runtime stores FQNs in slots; base name is after the dot
-        base = fqn.split(".", 1)[1] if "." in fqn else fqn
-        if base:
-            resolved_cols.append(base)
-
-    if not resolved_cols:
-        resolved_cols = table_columns_from_binder(binder_yaml, table)
-
-    # If still nothing, fall back to * (unlikely if binder is present)
-    if not resolved_cols:
-        col_sql = "*"
-    else:
-        # Quote identifiers for SQLite
-        col_sql = ", ".join(f'"{c}"' for c in resolved_cols)
-
-    sql = f'SELECT {col_sql} FROM "{table}"'
-    if isinstance(limit, int) and limit > 0:
-        sql += f" LIMIT {limit}"
-    return sql
-
-def execute_sqlite(db_path: str, sql: str) -> Tuple[List[Dict[str, Any]], int]:
-    """Execute SQL against SQLite and return rows as list of dicts + rowcount."""
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
-    try:
-        cur = conn.execute(sql)
-        rows_raw = cur.fetchall()
-        rows = [dict(r) for r in rows_raw]
-        return rows, len(rows)
-    finally:
-        conn.close()
 
 # ----------------- IO helpers -----------------
 def must_load_yaml(path: Path) -> Dict[str, Any]:
@@ -219,9 +166,7 @@ def iter_tables(tbls: Any):
             yield str(tname)
 
 def infer_column_types(cinfo: Dict[str, Any], col_name: str) -> List[str]:
-    """Map int/float/decimal → numeric unless 'id' is present in name/labels.
-    If it looks like an id, explicitly include 'id' and do not coerce numerics."""
-    # collect hints
+    """Map int/float/decimal → numeric unless 'id' is present in name/labels."""
     want: List[str] = []
     sl = cinfo.get("slot_types")
     if isinstance(sl, list):
@@ -248,7 +193,7 @@ def infer_column_types(cinfo: Dict[str, Any], col_name: str) -> List[str]:
             mapped.append(h)
 
     if looks_id:
-        mapped.append("id")  # <-- ensure 'id' is present when it looks like an id
+        mapped.append("id")
 
     all_types = set([t.strip().lower().replace(" ", "_") for t in want + mapped if isinstance(t, str)])
     return sorted(all_types)
@@ -336,19 +281,16 @@ def harvest_and_canonicalize(raw: str,
                              tables_by_lc: Dict[str, str],
                              columns_by_lc: Dict[str, str],
                              connectors_map: Dict[str, str]) -> RuntimeResult:
-    # Canonical tokens (drop fillers)
     canonicals: List[str] = []
     for s in spans:
         if s.role == "filler":
             continue
-        # Normalize connectors & SELECT to uppercase tokens for grammar terminals
         if s.role == "connector" or s.canonical == "select":
             canon = s.canonical.upper()
         else:
             canon = s.canonical
         canonicals.append(canon)
 
-    # Simple slots (for future SQL assembly)
     values: List[str] = []
     for m in re.finditer(r"(['\"]).*?\1", raw):
         inner = is_quoted_string(m.group(0))
@@ -372,13 +314,11 @@ def harvest_and_canonicalize(raw: str,
         "values": values,
     }
 
-    # Grammar nudge: ensure SELECT ... FROM ... minimal shape
     has_select = any(c == "SELECT" for c in canonicals)
     has_from   = any(c == "FROM" for c in canonicals)
     if has_select and not has_from:
         canonicals.append("FROM")
 
-    # Unmapped tokens (for debugging)
     covered = set()
     for s in spans:
         covered.update(range(s.start, s.end))
@@ -398,9 +338,6 @@ def harvest_and_canonicalize(raw: str,
 
 # ----------------- Lark parse -----------------
 def try_parse_with_lark(grammar_text: str, canonical_tokens: List[str], want_tree: bool) -> Tuple[bool, Optional[str], Optional[str]]:
-    # Feed a whitespace-separated stream of canonical tokens to the grammar.
-    # Assumes grammar terminals are compatible (e.g., SELECT, FROM, AND...) and
-    # it has terminals/nonterminals for identifiers where needed.
     text = " ".join(canonical_tokens).strip()
     try:
         parser = Lark(grammar_text, parser="earley", lexer="dynamic_complete")
@@ -432,6 +369,9 @@ def map_text(text: str,
     res.tree = tree
     if not ok and err:
         res.warnings.append(f"Grammar parse failed: {err}")
+
+    # NOTE: SQL generation/execution is handled in main() to avoid
+    # doing it twice (env + CLI) and to keep map_text pure.
     return res
 
 # ----------------- CLI -----------------
@@ -467,16 +407,19 @@ def main(argv: Optional[List[str]] = None) -> int:
             print("Missing path after --db", file=sys.stderr)
             return 2
 
+    # flags cleanup
     argv = [a for a in argv if a not in ("--json","--tree","--sql")]
     if not argv:
         print("No input text provided.", file=sys.stderr)
         return 2
     text = " ".join(argv)
 
+    # load artifacts
     vocab_yaml   = must_load_yaml(VOCAB_PATH)
     binder_yaml  = must_load_yaml(BINDER_PATH)
     grammar_text = must_load_text(GRAMMAR_PATH)
 
+    # map to canonical / slots
     res = map_text(text, vocab_yaml, binder_yaml, grammar_text, want_tree)
 
     payload = {
@@ -487,50 +430,34 @@ def main(argv: Optional[List[str]] = None) -> int:
         "warnings": res.warnings,
     }
 
-    sql_stmt = None
-    rows = None
-    rowcount = None
+    # ---- Optional SQL ----
+    # If user asked for --sql OR provided db (via flag or env)
+    env_db = os.environ.get("DB_PATH", "").strip()
+    use_db = db_path or (env_db if env_db else None)
 
-    # Optionally build SQL (only if we resolved a table and parse_ok)
-    if want_sql and res.parse_ok and (res.slots or {}).get("table"):
+    if res.parse_ok and ((want_sql) or use_db):
         try:
-            sql_stmt = build_select_sql(res, binder_yaml, limit=limit)
+            sql_stmt = build_select_sql_from_slots(res.slots, binder_yaml, limit=limit)
+            sql_block: Dict[str, Any] = {"query": sql_stmt}
+            if use_db:
+                exec_res = execute_sqlite(use_db, sql_stmt)
+                sql_block.update(exec_res)
+                sql_block["db_path"] = use_db
+            payload["sql"] = sql_block
         except Exception as e:
-            res.warnings.append(f"SQL build error: {e}")
-
-    # Optionally execute SQL if db path provided
-    if db_path and res.parse_ok and (res.slots or {}).get("table"):
-        # Build if not already built
-        if not sql_stmt:
-            try:
-                sql_stmt = build_select_sql(res, binder_yaml, limit=limit)
-            except Exception as e:
-                res.warnings.append(f"SQL build error: {e}")
-        if sql_stmt:
-            try:
-                rows, rowcount = execute_sqlite(db_path, sql_stmt)
-            except Exception as e:
-                res.warnings.append(f"DB exec error: {e}")
-
-    # Output
-    if sql_stmt is not None:
-        payload["sql"] = sql_stmt
-    if rows is not None:
-        payload["rows"] = rows
-        payload["rowcount"] = rowcount
-    if db_path:
-        payload["db_path"] = db_path
+            res.warnings.append(f"SQL error: {e}")
+            payload["warnings"] = res.warnings
 
     if not as_json:
         print("CANONICAL TOKENS:", " ".join(res.canonical_tokens))
         print("PARSE:", "OK" if res.parse_ok else "FAIL")
         print("SLOTS:")
         print(json.dumps(res.slots, indent=2))
-        if sql_stmt:
-            print("SQL:", sql_stmt)
-        if rows is not None:
-            print(f"ROWS ({rowcount}):")
-            print(json.dumps(rows, indent=2))
+        if "sql" in payload:
+            print("SQL:", payload["sql"]["query"])
+            if "rows" in payload["sql"]:
+                print(f'ROWS ({payload["sql"]["rowcount"]}):')
+                print(json.dumps(payload["sql"]["rows"], indent=2))
         if res.warnings:
             print("WARNINGS:", *res.warnings, sep="\n- ")
         if want_tree and res.tree:
@@ -541,7 +468,6 @@ def main(argv: Optional[List[str]] = None) -> int:
             payload["tree"] = res.tree
         print(json.dumps(payload, indent=2))
     return 0
-
 
 if __name__ == "__main__":
     sys.exit(main())
