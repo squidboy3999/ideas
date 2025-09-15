@@ -39,6 +39,7 @@ dev = [
 [project.scripts]
 vbg_generate = "vbg_tools.graph_to_artifacts:main"
 vbg_runtime = "vbg_tools.graph_runtime:main"
+vbg_surfaces = "vbg_tools.make_surfaces:main"
 
 [tool.setuptools]
 package-dir = { "" = "src" }

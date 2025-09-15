@@ -237,6 +237,8 @@ def test_synth_grammar_from_minimal_rows():
     assert 'SELECT: "select"i' in grammar
     assert 'FROM: "from"i' in grammar
     assert 'AND: "and"i' in grammar
+    # grammar ignores whitespace
+    assert "%ignore WS" in grammar
     # start rule and query
     assert "start: query" in grammar
     # slots are rewritten to nonterminals (COLUMNS/TABLE); template present (may include fallback alt)
@@ -296,11 +298,23 @@ def test_synth_grammar_aggregates_rules_no_duplicates():
     expr_line = next(x for x in grammar.splitlines() if x.startswith("expression:"))
     pred_line = next(x for x in grammar.splitlines() if x.startswith("predicate:"))
 
-    # Rewritten unknown {value} -> VALUE
-    assert "sum VALUE" in expr_line and "avg VALUE" in expr_line
+    # Rewritten unknown {value} -> VALUE; function tokens may be quoted by the generator.
+    has_sum = ("sum VALUE" in expr_line) or ('"sum" VALUE' in expr_line)
+    has_avg = ("avg VALUE" in expr_line) or ('"avg" VALUE' in expr_line)
+    assert has_sum and has_avg
     assert " | " in expr_line
 
-    #assert "value > VALUE" in pred_line and "value < VALUE" in pred_line
-    assert ('value ">" VALUE' in pred_line) or ("value > VALUE" in pred_line)
-    assert ('value "<" VALUE' in pred_line) or ("value < VALUE" in pred_line)
+    # Operators may be quoted in the rewritten grammar; accept both forms
+    assert (
+        ('value ">" VALUE' in pred_line)
+        or ('"value" ">" VALUE' in pred_line)
+        or ('value > VALUE' in pred_line)
+        or ('"value" > VALUE' in pred_line)
+    )
+    assert (
+        ('value "<" VALUE' in pred_line)
+        or ('"value" "<" VALUE' in pred_line)
+        or ('value < VALUE' in pred_line)
+        or ('"value" < VALUE' in pred_line)
+    )
     assert " | " in pred_line

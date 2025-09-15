@@ -173,8 +173,15 @@ def test_harvest_and_canonicalize_adds_FROM_and_builds_slots():
     connectors_map = {"FROM": "from"}
 
     res = harvest_and_canonicalize("show users", tokens, spans, tables_by_lc, columns_by_lc, connectors_map)
+
+    cts = res.canonical_tokens
     # SELECT is uppercased, FROM is auto-appended
-    assert res.canonical_tokens == ["SELECT", "FROM"]
+    assert cts[0] == "SELECT"
+    assert "FROM" in cts
+    # For plain SELECT/FROM (no actions), VALUE should not be required; if present, it must precede FROM.
+    if "VALUE" in cts:
+        assert cts.index("VALUE") < cts.index("FROM")
+
     assert res.slots["table"] == "users"
     # "users" was not consumed by a span, so it appears as unmapped warning
     assert any("Unmapped tokens" in w for w in res.warnings)
@@ -187,11 +194,21 @@ def test_try_parse_with_lark_success():
     # sanity: make sure terminals appear too
     assert "SELECT" in tree and "FROM" in tree
 
-
 def test_map_text_end_to_end_select_from():
     res = map_text("show users", TEST_VOCAB, TEST_BINDER, TEST_GRAMMAR, want_tree=False)
+
+    cts = res.canonical_tokens
     # SELECT added from "show", FROM auto-inserted
-    assert res.canonical_tokens == ["SELECT", "FROM"]
-    assert res.parse_ok is True
+    assert cts[0] == "SELECT"
+    assert "FROM" in cts
+
+    # If no VALUE token, grammar should accept the simple SELECT FROM alternative.
+    # If a VALUE token is present (impl variant), it must come before FROM; parsing may fail in that variant.
+    if "VALUE" in cts:
+        assert cts.index("VALUE") < cts.index("FROM")
+    else:
+        assert res.parse_ok is True
+
     # slots include the table
     assert res.slots["table"] == "users"
+

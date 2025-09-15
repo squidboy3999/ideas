@@ -132,73 +132,58 @@ keywords:
       COMMA: ","
 # SQL functions and templates
 sql_actions:
+  # ---------- Projections (non-PostGIS) ----------
   count:
+    placement: projection
+    bind_style: of
     aliases: [count, number, number of, how many, quantity of, total number of]
     template: "COUNT({column})"
     applicable_types: {'column': [any]}
     label_rules: ['not id']
     explanation: "Returns the number of rows that match a specified criterion."
   sum:
+    placement: projection
+    bind_style: of
     aliases: [sum, total, sum of, total of, total amount of, aggregate]
     template: "SUM({column})"
     applicable_types: {'column': [numeric]}
     label_rules: ['not id']
     explanation: "Returns the sum of all values in a numeric column."
   avg:
+    placement: projection
+    bind_style: of
     aliases: [average, average of, avg, mean]
     template: "AVG({column})"
     applicable_types: {'column': [numeric]}
     label_rules: ['not id']
     explanation: "Returns the average of all values in a numeric column."
   min:
+    placement: projection
+    bind_style: of
     aliases: [minimum, least, min, smallest, lowest, bottom]
     template: "MIN({column})"
     applicable_types: {'column': [numeric, text, date, timestamp]}
     label_rules: []
     explanation: "Returns the minimum value of a column."
   max:
+    placement: projection
+    bind_style: of
     aliases: [maximum, most, max, largest, highest, greatest]
     template: "MAX({column})"
     applicable_types: {'column': [numeric, text, date, timestamp]}
     label_rules: []
     explanation: "Returns the maximum value of a column."
   distinct:
+    placement: projection
+    bind_style: of
     aliases: [distinct, unique, unique values of]
     template: "DISTINCT {column}"
     applicable_types: {'column': [any]}
     label_rules: ['not id']
     explanation: "Returns only the unique values in a column."
-  order_by_asc:
-    aliases: [order by ascending, sort by ascending, sort by, order by, in ascending order]
-    template: "ORDER BY {column} ASC"
-    applicable_types: {'column': [any]}
-    label_rules: []
-    explanation: "Sorts the results in ascending order based on a column."
-  order_by_desc:
-    aliases: [order by descending, sort by descending, in descending order]
-    template: "ORDER BY {column} DESC"
-    applicable_types: {'column': [any]}
-    label_rules: []
-    explanation: "Sorts the results in descending order based on a column."
-  group_by:
-    aliases: [group by, grouped by]
-    template: "GROUP BY {column}"
-    applicable_types: {'column': [any]}
-    label_rules: []
-    explanation: "Groups rows that have the same values into summary rows."
-  having:
-    aliases: [having, with]
-    template: "HAVING {condition}"
-    applicable_types: {'condition': [any]}
-    label_rules: []
-    explanation: "Filters groups based on a condition."
-  limit:
-    aliases: [limit, top, first, only]
-    template: "LIMIT {value}"
-    applicable_types: {'value': [numeric]}
-    label_rules: []
-    explanation: "Restricts the number of rows returned by the query."
   extract:
+    placement: projection
+    bind_style: from
     aliases: [extract, get the]
     template: "EXTRACT({part} FROM {column})"
     pattern: ["{part}", "from", "{column}"]
@@ -206,12 +191,16 @@ sql_actions:
     label_rules: []
     explanation: "Extracts a specific part (e.g., year, month) from a date or time value."
   length:
+    placement: projection
+    bind_style: of
     aliases: [length in, length of, character count, string length]
     template: "LENGTH({column})"
     applicable_types: {'column': [text]}
     label_rules: []
     explanation: "Returns the length of a string."
   concat:
+    placement: projection
+    bind_style: and
     aliases: [concat, concatenate, join, combine]
     template: "CONCAT({column1}, {column2})"
     pattern: ["{column1}", "and", "{column2}"]
@@ -219,20 +208,87 @@ sql_actions:
     label_rules: []
     explanation: "Joins two or more strings together."
   cast:
+    placement: projection
+    bind_style: to
     aliases: [cast, convert, change type]
     template: "CAST({column} AS {to_type})"
     pattern: ["{column}", "to", "{to_type}"]
     applicable_types: {'column': [any], 'to_type': [any]}
     label_rules: []
     explanation: "Converts a value from one data type to another."
-postgis_actions:
+  # ---------- Clause actions ----------
+  group_by:
+    placement: clause
+    clause_phase: group_by
+    phase_index: 30
+    bind_style: none
+    aliases: [group by, grouped by]
+    template: "GROUP BY {column}"
+    applicable_types: {'column': [any]}
+    label_rules: []
+    explanation: "Groups rows that have the same values into summary rows."
+  having:
+    placement: clause
+    clause_phase: having
+    phase_index: 40
+    bind_style: none
+    aliases: [having, with]
+    template: "HAVING {condition}"
+    applicable_types: {'condition': [any]}
+    label_rules: []
+    explanation: "Filters groups based on a condition."
+  order_by_asc:
+    placement: clause
+    clause_phase: order_by
+    phase_index: 50
+    bind_style: none
+    aliases: [order by ascending, sort by ascending, sort by, order by, in ascending order]
+    template: "ORDER BY {column} ASC"
+    applicable_types: {'column': [any]}
+    label_rules: []
+    explanation: "Sorts the results in ascending order based on a column."
+  order_by_desc:
+    placement: clause
+    clause_phase: order_by
+    phase_index: 50
+    bind_style: none
+    aliases: [order by descending, sort by descending, in descending order]
+    template: "ORDER BY {column} DESC"
+    applicable_types: {'column': [any]}
+    label_rules: []
+    explanation: "Sorts the results in descending order based on a column."
+  limit:
+    placement: clause
+    clause_phase: limit
+    phase_index: 60
+    bind_style: none
+    aliases: [limit]
+    template: "LIMIT {value}"
+    applicable_types: {'value': [numeric]}
+    label_rules: []
+    explanation: "Restricts the number of rows returned by the query."
+  limit_one:
+    placement: clause
+    clause_phase: limit
+    phase_index: 60
+    bind_style: none
+    aliases: [top, first, only]
+    template: "LIMIT 1"
+    applicable_types: {}
+    label_rules: []
+    explanation: "Restricts the result set to a single row."
+  # ---------- PostGIS (now unified here as projections) ----------
   st_perimeter:
+    placement: projection
+    bind_style: of
     aliases: [perimeter, boundary length, outline length, length of boundary]
     template: "ST_Perimeter({geom})"
     applicable_types: {'geom': [geometry_polygon, geography_polygon]}
     label_rules: ['postgis']
     explanation: "Returns the perimeter (boundary length) of a polygonal geometry."
   st_distance:
+    placement: projection
+    bind_style: of
     aliases: [distance, how far, distance between, separation of]
     template: "ST_Distance({geom1}, {geom2})"
     pattern: ["of", "{geom1}", "from", "{geom2}"]
@@ -240,6 +296,8 @@ postgis_actions:
     label_rules: ['postgis']
     explanation: "Calculates the shortest distance between two geometries or geographies."
   st_intersects:
+    placement: projection
+    bind_style: with
     aliases: [intersects, overlaps with]
     template: "ST_Intersects({geom1}, {geom2})"
     pattern: ["{geom1}", "with", "{geom2}"]
@@ -247,30 +305,40 @@ postgis_actions:
     label_rules: ['postgis']
     explanation: "Tests if two geometries or geographies intersect."
   st_area:
+    placement: projection
+    bind_style: of
     aliases: [area, area of, size of, surface area]
     template: "ST_Area({geom})"
     applicable_types: {'geom': [geometry_polygon, geography_polygon]}
     label_rules: ['postgis']
     explanation: "Calculates the area of a polygonal geometry."
   st_length:
+    placement: projection
+    bind_style: of
     aliases: [length along, length of, distance along, distance of, path length, line length]
     template: "ST_Length({geom})"
     applicable_types: {'geom': [geometry_linestring, geography_linestring]}
     label_rules: ['postgis']
     explanation: "Calculates the length of a linestring geometry."
   st_x:
+    placement: projection
+    bind_style: of
     aliases: [x coordinate, longitude, lon, x pos]
     template: "ST_X({point})"
     applicable_types: {'point': [geometry_point, geography_point]}
     label_rules: ['postgis']
     explanation: "Returns the X coordinate of a point geometry."
   st_y:
+    placement: projection
+    bind_style: of
     aliases: [y coordinate, latitude, lat, y pos]
     template: "ST_Y({point})"
     applicable_types: {'point': [geometry_point, geography_point]}
     label_rules: ['postgis']
     explanation: "Returns the Y coordinate of a point geometry."
   st_within:
+    placement: projection
+    bind_style: in
     aliases: [within, inside, is inside, is within, contained in]
     template: "ST_Within({geom1}, {geom2})"
     pattern: ["{geom1}", "in", "{geom2}"]
@@ -278,6 +346,8 @@ postgis_actions:
     label_rules: ['postgis']
     explanation: "Tests if a geometry is entirely contained within another."
   st_contains:
+    placement: projection
+    bind_style: and
     aliases: [contains, encloses, surrounds]
     template: "ST_Contains({geom1}, {geom2})"
     pattern: ["{geom1}", "and", "{geom2}"]
@@ -285,12 +355,16 @@ postgis_actions:
     label_rules: ['postgis']
     explanation: "Tests if a geometry contains another geometry entirely."
   st_geometrytype:
+    placement: projection
+    bind_style: of
     aliases: [geometry type, type of geometry, shape type, what kind of shape]
     template: "ST_GeometryType({geom})"
     applicable_types: {'geom': [geometry, geography, geometry_point, geometry_linestring, geometry_polygon]}
     label_rules: ['postgis']
     explanation: "Returns the type of a geometry as a string."
   st_buffer:
+    placement: projection
+    bind_style: by
     aliases: [buffer, buffer around, area around, expand by]
     template: "ST_Buffer({geom}, {radius})"
     pattern: ["{geom}", "by", "{radius}"]
@@ -298,18 +372,24 @@ postgis_actions:
     label_rules: ['postgis']
     explanation: "Creates a polygon that surrounds a geometry at a specified distance."
   st_union:
+    placement: projection
+    bind_style: of
     aliases: [union, combine, merge, union of]
     template: "ST_Union({geom_collection})"
     applicable_types: {'geom_collection': [geometry, geography, geometry_point, geometry_linestring, geometry_polygon]}
     label_rules: ['postgis']
     explanation: "Merges multiple geometries into a single geometry."
   st_centroid:
+    placement: projection
+    bind_style: of
     aliases: [centroid, center, center point, geometric center]
     template: "ST_Centroid({geom})"
     applicable_types: {'geom': [geometry, geography, geometry_point, geometry_linestring, geometry_polygon]}
     label_rules: ['postgis']
     explanation: "Returns the geometric center of a geometry."
   st_simplify:
+    placement: projection
+    bind_style: by
     aliases: [simplify, simplify shape, generalize]
     template: "ST_Simplify({geom}, {tolerance})"
     pattern: ["{geom}", "by", "{tolerance}"]
@@ -317,6 +397,8 @@ postgis_actions:
     label_rules: ['postgis']
     explanation: "Simplifies a geometry by reducing the number of vertices."
   st_touches:
+    placement: projection
+    bind_style: and
     aliases: [touches, borders, is adjacent to]
     template: "ST_Touches({geom1}, {geom2})"
     pattern: ["{geom1}", "and", "{geom2}"]
@@ -324,6 +406,8 @@ postgis_actions:
     label_rules: ['postgis']
     explanation: "Tests if two geometries touch only at their boundaries."
   st_crosses:
+    placement: projection
+    bind_style: and
     aliases: [crosses, goes across]
     template: "ST_Crosses({geom1}, {geom2})"
     pattern: ["{geom1}", "and", "{geom2}"]
@@ -331,6 +415,8 @@ postgis_actions:
     label_rules: ['postgis']
     explanation: "Tests if two geometries cross each other."
   st_spatial_index:
+    placement: projection
+    bind_style: with
     aliases: [spatial index]
     template: "{geom1} && {geom2}"
     pattern: ["{geom1}", "with", "{geom2}"]
@@ -338,6 +424,8 @@ postgis_actions:
     label_rules: ['postgis']
     explanation: "A spatial index operator that checks for intersection."
   st_distance_operator:
+    placement: projection
+    bind_style: to
     aliases: [closest, nearest, closest to]
     template: "{geom1} <-> {geom2}"
     pattern: ["{geom1}", "to", "{geom2}"]
@@ -345,6 +433,8 @@ postgis_actions:
     label_rules: ['postgis']
     explanation: "A spatial operator that returns the distance between two geometries."
   st_transform:
+    placement: projection
+    bind_style: to
     aliases: [transform, reproject, convert coordinate system]
     template: "ST_Transform({geom}, {srid})"
     pattern: ["{geom}", "to", "{srid}"]

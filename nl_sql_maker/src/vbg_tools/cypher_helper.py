@@ -179,33 +179,44 @@ def to_alias_list(ent: Any) -> List[str]:
     return []
 
 def _prepare_connectors_from_keywords(kw_yaml: dict) -> Dict[str, str]:
+    """
+    Build a canonical->surface map for connectors,
+    always ensuring AND/OR/NOT, FROM/OF, COMMA exist.
+    Prefer explicit connectors block; otherwise fallback from logical/prepositions.
+    """
     kw = kw_yaml.get("keywords") or {}
     connectors = kw.get("connectors") or {}
     out: Dict[str,str] = {}
+
     if isinstance(connectors, dict) and connectors:
         for k, v in connectors.items():
             out[str(k).upper()] = str(v) if v is not None else str(k).upper()
-    if not out:
-        logical = (kw.get("logical_operators") or {})
-        preps   = (kw.get("prepositions") or {})
-        def first_alias(d, key):
-            ent = d.get(key) or {}
-            als = to_alias_list(ent)
-            return als[0] if als else key
-        out = {
-            "AND": first_alias(logical, "and"),
-            "OR":  first_alias(logical, "or"),
-            "FROM": first_alias(preps, "from"),
-            "OF": first_alias(preps, "of"),
-            "COMMA": ",",
-        }
+
+    logical = (kw.get("logical_operators") or {})
+    preps   = (kw.get("prepositions") or {})
+
+    def first_alias(d: dict, key: str, default: str) -> str:
+        ent = d.get(key) or {}
+        arr = to_alias_list(ent)
+        return (arr[0] if arr else default)
+
+    # Ensure FROM/OF/COMMA
+    out.setdefault("FROM", first_alias(preps, "from", "from"))
+    out.setdefault("OF",   first_alias(preps, "of",   "of"))
+    out.setdefault("COMMA", ",")
+
+    # Ensure AND/OR/NOT
+    out.setdefault("AND", first_alias(logical, "and", "and"))
+    out.setdefault("OR",  first_alias(logical, "or",  "or"))
+    out.setdefault("NOT", first_alias(logical, "not", "not"))
+
     return out
 
 def ingest_keywords(session, kw_yaml: dict) -> None:
     def _ingest(tx):
         kw = kw_yaml.get("keywords") or {}
 
-        # Connectors (first-class)
+        # Connectors (first-class) — now includes NOT when present/fallback
         connectors = _prepare_connectors_from_keywords(kw_yaml)
         for name, surface in connectors.items():
             tx.run("MERGE (k:Connector {name:$n}) SET k.surface=$s", n=str(name), s=str(surface))
@@ -220,7 +231,7 @@ def ingest_keywords(session, kw_yaml: dict) -> None:
             if isinstance(surf, str):
                 surface_to_upper[surf.lower()] = up
 
-        # Canonicals & aliases by role (skip duplicate connector canonicals)
+        # Canonicals & aliases by role
         for section, role in KW_ROLES.items():
             sec = kw.get(section) or {}
             if not isinstance(sec, dict): continue
@@ -238,10 +249,10 @@ def ingest_keywords(session, kw_yaml: dict) -> None:
                         """, s=surf, toks=tokenize(surf), ng=(len(tokenize(surf)) > 1),
                              n=str(canonical), r=role)
 
-            elif section in ("prepositions","logical_operators"):
+            elif section == "prepositions":
+                # Map preposition aliases to the appropriate connector CanonicalTerm
                 for canonical, ent in sec.items():
-                    aliases = to_alias_list(ent)
-                    for surf in aliases:
+                    for surf in to_alias_list(ent):
                         up = surface_to_upper.get(surf.lower())
                         if up:
                             tx.run("""
@@ -252,7 +263,32 @@ def ingest_keywords(session, kw_yaml: dict) -> None:
                                 MERGE (a)-[:ALIAS_OF {role:'connector'}]->(ct)
                             """, s=surf, toks=tokenize(surf), ng=(len(tokenize(surf)) > 1), up=up)
 
-            elif section == "filler_words" or section == "comparison_operators":
+            elif section == "logical_operators":
+                # 1) true logical CanonicalTerms (role='logical')
+                for canonical, ent in sec.items():
+                    tx.run("MERGE (ct:CanonicalTerm {name:$n}) SET ct.role='logical'", n=str(canonical))
+                    for surf in to_alias_list(ent):
+                        tx.run("""
+                            MERGE (a:Alias {surface:$s})
+                            SET a.tokens=$toks, a.is_ngram=$ng
+                            WITH a
+                            MATCH (ct:CanonicalTerm {name:$n})
+                            MERGE (a)-[:ALIAS_OF {role:'logical'}]->(ct)
+                        """, s=surf, toks=tokenize(surf), ng=(len(tokenize(surf)) > 1), n=str(canonical))
+                # 2) also map those aliases onto connector CTs so grammar terminals line up
+                for canonical, ent in sec.items():
+                    for surf in to_alias_list(ent):
+                        up = surface_to_upper.get(surf.lower())
+                        if up:
+                            tx.run("""
+                                MERGE (a:Alias {surface:$s})
+                                SET a.tokens=$toks, a.is_ngram=$ng
+                                WITH a
+                                MATCH (ct:CanonicalTerm {name:$up})
+                                MERGE (a)-[:ALIAS_OF {role:'connector'}]->(ct)
+                            """, s=surf, toks=tokenize(surf), ng=(len(tokenize(surf)) > 1), up=up)
+
+            elif section in ("filler_words", "comparison_operators"):
                 for canonical, ent in sec.items():
                     tx.run("MERGE (ct:CanonicalTerm {name:$n}) SET ct.role=$r", n=str(canonical), r=role)
                     for surf in to_alias_list(ent):
@@ -275,6 +311,10 @@ def ingest_keywords(session, kw_yaml: dict) -> None:
                     "pattern": ent.get("pattern"),
                     "label_rules": ent.get("label_rules"),
                     "explanation": ent.get("explanation"),
+                    "placement": ent.get("placement"),
+                    "bind_style": ent.get("bind_style"),
+                    "clause_phase": ent.get("clause_phase"),
+                    "phase_index": ent.get("phase_index"),
                 }
                 tx.run("MERGE (f:Function {name:$n}) SET f += $p", n=str(fname), p=sanitize_props(props))
                 tx.run("MERGE (ct:CanonicalTerm {name:$n}) SET ct.role=$r", n=str(fname), r=role)
@@ -306,6 +346,60 @@ def ingest_keywords(session, kw_yaml: dict) -> None:
         ingest_action_block("sql_actions", "sql_action")
         ingest_action_block("postgis_actions", "postgis_action")
 
+        # Comparators → Predicate rules.
+        # If a comparator lacks a template in the YAML, synthesize a sensible default.
+        _default_comp_templates = {
+            "equal":                 "{column} = {value}",
+            "not_equal":             "{column} != {value}",
+            "greater_than":          "{column} > {value}",
+            "less_than":             "{column} < {value}",
+            "greater_than_or_equal": "{column} >= {value}",
+            "less_than_or_equal":    "{column} <= {value}",
+            "between":               "{column} between {value1} and {value2}",
+            "in":                    "{column} in {list}",
+            "like":                  "{column} like {value}",
+            "is_null":               "{column} is null",
+            "is_not_null":           "{column} is not null",
+        }
+
+        def _template_for(canonical: str, ent: dict) -> str | None:
+            t = ent.get("template")
+            if isinstance(t, str) and t.strip():
+                return t
+            return _default_comp_templates.get(str(canonical))
+
+        def _ingest_comparators(block: dict):
+            if not isinstance(block, dict):
+                return
+            for canonical, ent in block.items():
+                template = _template_for(canonical, (ent or {}))
+                if not isinstance(template, str) or not template.strip():
+                    continue
+                rid = norm_rule_id(f"{canonical}|{template}")
+                tx.run("""
+                    MERGE (r:Rule {id:$id})
+                    SET r.text=$text, r.canonical=$canonical, r.role='comparator'
+                """, id=rid, text=template, canonical=str(canonical))
+                tx.run("MATCH (nt:Nonterminal {name:'Predicate'}), (r:Rule {id:$id}) MERGE (nt)-[:HAS_RULE]->(r)", id=rid)
+                tx.run("MATCH (ct:CanonicalTerm {name:$canonical}), (r:Rule {id:$id}) MERGE (r)-[:USES_CANONICAL]->(ct)",
+                       canonical=str(canonical), id=rid)
+                app = ent.get("applicable_types") or {}
+                for slot, types in (app.items() if isinstance(app, dict) else []):
+                    sid = f"{rid}:{slot}"
+                    tx.run("MERGE (s:Slot {id:$id}) SET s.name=$name", id=sid, name=str(slot))
+                    tx.run("MATCH (r:Rule {id:$rid}), (s:Slot {id:$sid}) MERGE (r)-[:REQUIRES_SLOT]->(s)", rid=rid, sid=sid)
+                    arr = types if isinstance(types, list) else [types]
+                    for t in arr:
+                        tnorm = norm_type_name(t)
+                        tx.run("MERGE (st:SlotType {name:$n})", n=tnorm)
+                        tx.run("MATCH (s:Slot {id:$sid}), (st:SlotType {name:$n}) MERGE (s)-[:SATISFIED_BY]->(st)",
+                               sid=sid, n=tnorm)
+                # link literals in rule to connectors for terminals (between/and/in)
+                _connect_literals_to_connectors(tx, rid, template)
+
+        comparators = ((kw.get("comparison_operators") or {}))
+        _ingest_comparators(comparators)
+
     session.execute_write(_ingest)
 
 # -------------------- grammar rules from templates --------------------
@@ -323,9 +417,10 @@ def _connect_literals_to_connectors(tx, rule_id: str, text: str):
 
 def ingest_rules_from_templates(session, kw_yaml: dict) -> None:
     def _ingest(tx):
-        for nt in ("Query","Expression","Predicate"):
+        # ensure Nonterminals exist
+        for nt in ("Query","Expression","Predicate","Clause"):
             tx.run("MERGE (:Nonterminal {name:$n})", n=nt)
-
+        # global SELECT template → Query rules
         select_tpl = ((kw_yaml.get("keywords") or {}).get("global_templates") or {}).get("select_template")
         if isinstance(select_tpl, str) and select_tpl:
             rid = norm_rule_id("select|" + select_tpl)
@@ -345,16 +440,16 @@ def ingest_rules_from_templates(session, kw_yaml: dict) -> None:
                     tx.run("MATCH (s:Slot {id:$sid}), (st:SlotType {name:$n}) MERGE (s)-[:SATISFIED_BY]->(st)", sid=sid, n=t)
             _connect_literals_to_connectors(tx, rid, select_tpl)
 
-        blocks = [("sql_actions","sql_action","Expression"),
-                  ("postgis_actions","postgis_action","Expression")]
-        comparators = ((kw_yaml.get("keywords") or {}).get("comparison_operators") or {})
-
-        for section, role, nt_name in blocks:
-            sec = (kw_yaml.get(section) or {})
-            if not isinstance(sec, dict): continue
-            for canonical, ent in sec.items():
+        # Actions (Expression/Clause)
+        def ingest_action_block(block_key: str, role: str):
+            block = kw_yaml.get(block_key) or {}
+            if not isinstance(block, dict): return
+            for canonical, ent in block.items():
                 template = ent.get("template")
-                if not isinstance(template, str) or not template: continue
+                if not isinstance(template, str) or not template:
+                    continue
+                placement = (ent.get("placement") or "projection").strip().lower()
+                nt_name = "Clause" if placement == "clause" else "Expression"
                 rid = norm_rule_id(f"{canonical}|{template}")
                 tx.run("""
                     MERGE (r:Rule {id:$id})
@@ -379,35 +474,14 @@ def ingest_rules_from_templates(session, kw_yaml: dict) -> None:
                                sid=sid, n=tnorm)
                 _connect_literals_to_connectors(tx, rid, template)
 
-        if isinstance(comparators, dict):
-            for canonical, ent in comparators.items():
-                template = ent.get("template")
-                if not isinstance(template, str) or not template: continue
-                rid = norm_rule_id(f"{canonical}|{template}")
-                tx.run("""
-                    MERGE (r:Rule {id:$id})
-                    SET r.text=$text, r.canonical=$canonical, r.role='comparator'
-                """, id=rid, text=template, canonical=str(canonical))
-                tx.run("MATCH (nt:Nonterminal {name:'Predicate'}), (r:Rule {id:$id}) MERGE (nt)-[:HAS_RULE]->(r)", id=rid)
-                tx.run("MATCH (ct:CanonicalTerm {name:$canonical}), (r:Rule {id:$id}) MERGE (r)-[:USES_CANONICAL]->(ct)",
-                       canonical=str(canonical), id=rid)
-                app = ent.get("applicable_types") or {}
-                for slot, types in (app.items() if isinstance(app, dict) else []):
-                    sid = f"{rid}:{slot}"
-                    tx.run("MERGE (s:Slot {id:$id}) SET s.name=$name", id=sid, name=str(slot))
-                    tx.run("MATCH (r:Rule {id:$rid}), (s:Slot {id:$sid}) MERGE (r)-[:REQUIRES_SLOT]->(s)", rid=rid, sid=sid)
-                    arr = types if isinstance(types, list) else [types]
-                    for t in arr:
-                        tnorm = norm_type_name(t)
-                        tx.run("MERGE (st:SlotType {name:$n})", n=tnorm)
-                        tx.run("MATCH (s:Slot {id:$sid}), (st:SlotType {name:$n}) MERGE (s)-[:SATISFIED_BY]->(st)",
-                               sid=sid, n=tnorm)
-                _connect_literals_to_connectors(tx, rid, template)
+        ingest_action_block("sql_actions", "sql_action")
+        ingest_action_block("postgis_actions", "postgis_action")
+
+        # Comparators (now synthesized when missing templates) → see above
+        # Done in ingest_keywords() for a single write-path and simpler reasoning.
     session.execute_write(_ingest)
 
 # -------------------- synthesize artifacts FROM graph --------------------
-# --- replace synth_vocabulary, synth_binder, synth_grammar with these ---
-
 def synth_vocabulary(session) -> dict:
     # ----- helpers that fully consume results inside tx -----
     def _block_by_role(role: str) -> List[Dict[str, Any]]:
@@ -440,17 +514,6 @@ def synth_vocabulary(session) -> dict:
             ).data()
         )
 
-    def _filler_aliases() -> List[str]:
-        # returns a plain list of strings
-        return session.execute_read(
-            lambda tx: tx.run(
-                """
-                MATCH (ct:CanonicalTerm {role:'filler'})<-[:ALIAS_OF]-(a:Alias)
-                RETURN a.surface AS a
-                """
-            ).value()
-        )
-
     def _actions_by_role(role: str) -> List[Dict[str, Any]]:
         return session.execute_read(
             lambda tx: tx.run(
@@ -459,8 +522,14 @@ def synth_vocabulary(session) -> dict:
                 OPTIONAL MATCH (f)-[ar:ARG_REQUIRES]->(st:SlotType)
                 WITH ct, f, collect({arg:ar.arg, st:st.name}) AS reqs
                 OPTIONAL MATCH (ct)<-[:ALIAS_OF]-(a:Alias)
-                RETURN ct.name AS name, f.template AS template,
-                       collect(DISTINCT a.surface) AS aliases, reqs
+                RETURN ct.name AS name,
+                       f.template AS template,
+                       f.placement AS placement,
+                       f.bind_style AS bind_style,
+                       f.clause_phase AS clause_phase,
+                       f.phase_index AS phase_index,
+                       collect(DISTINCT a.surface) AS aliases,
+                       reqs
                 """,
                 r=role,
             ).data()
@@ -481,11 +550,26 @@ def synth_vocabulary(session) -> dict:
     for r in _block_by_role("comparator"):
         als = sorted([a for a in r["aliases"] if a])
         comp[str(r["canonical"])] = {"aliases": als}
-    keywords["comparison_operators"] = comp
+    if comp:
+        keywords["comparison_operators"] = comp
+
+    # logical_operators (NEW)
+    logical = {}
+    for r in _block_by_role("logical"):
+        als = sorted([a for a in r["aliases"] if a])
+        logical[str(r["canonical"])] = {"aliases": als}
+    if logical:
+        keywords["logical_operators"] = logical
 
     # filler_words
-    fillers = sorted({a for a in _filler_aliases() if a})
-    keywords["filler_words"] = {"_skip": {"aliases": fillers}}
+    fillers = session.execute_read(
+        lambda tx: tx.run(
+            "MATCH (ct:CanonicalTerm {role:'filler'})<-[:ALIAS_OF]-(a:Alias) RETURN a.surface AS a"
+        ).value()
+    )
+    fillers = sorted({a for a in fillers if a})
+    if fillers:
+        keywords["filler_words"] = {"_skip": {"aliases": fillers}}
 
     # connectors (canonical -> surface)
     conns = {}
@@ -512,7 +596,18 @@ def synth_vocabulary(session) -> dict:
                     app[str(pair["arg"])].append(str(pair["st"]))
             for k in list(app.keys()):
                 app[k] = sorted(set(app[k]))
-            meta = {"template": r["template"], "aliases": sorted([a for a in r["aliases"] if a])}
+            meta: Dict[str, Any] = {
+                "template": r["template"],
+                "aliases": sorted([a for a in r["aliases"] if a]),
+            }
+            if r.get("placement") is not None:
+                meta["placement"] = r["placement"]
+            if r.get("bind_style") is not None:
+                meta["bind_style"] = r["bind_style"]
+            if r.get("clause_phase") is not None:
+                meta["clause_phase"] = r["clause_phase"]
+            if r.get("phase_index") is not None:
+                meta["phase_index"] = r["phase_index"]
             if app:
                 meta["applicable_types"] = app
             out[str(r["name"])] = meta
@@ -527,7 +622,7 @@ def synth_vocabulary(session) -> dict:
 
 
 def synth_binder(session) -> dict:
-    # ----- helpers that fully consume results inside tx -----
+    # ----- helpers -----
     def _table_rows() -> List[Dict[str, Any]]:
         return session.execute_read(
             lambda tx: tx.run("MATCH (t:Table) RETURN t.name AS n ORDER BY n").data()
@@ -553,7 +648,13 @@ def synth_binder(session) -> dict:
                 MATCH (f:Function)
                 OPTIONAL MATCH (f)-[ar:ARG_REQUIRES]->(st:SlotType)
                 WITH f, collect({arg:ar.arg, st:st.name}) AS reqs
-                RETURN f.name AS name, f.template AS template, reqs
+                RETURN f.name AS name,
+                       f.template AS template,
+                       f.placement AS placement,
+                       f.bind_style AS bind_style,
+                       f.clause_phase AS clause_phase,
+                       f.phase_index AS phase_index,
+                       reqs
                 ORDER BY name
                 """
             ).data()
@@ -567,11 +668,9 @@ def synth_binder(session) -> dict:
         )
 
     # ----- assemble binder -----
-    tables = {}
-    for rec in _table_rows():
-        tables[str(rec["n"])] = {}
+    tables = {str(rec["n"]): {} for rec in _table_rows()}
 
-    columns = {}
+    columns: Dict[str, Dict[str, Any]] = {}
     for rec in _column_rows():
         fqn = str(rec["fqn"])
         columns[fqn] = {
@@ -580,7 +679,7 @@ def synth_binder(session) -> dict:
             "slot_types": sorted({str(t) for t in rec["types"] if t}),
         }
 
-    functions = {}
+    functions: Dict[str, Dict[str, Any]] = {}
     for rec in _function_rows():
         app: Dict[str, List[str]] = {}
         for pair in rec["reqs"]:
@@ -592,16 +691,22 @@ def synth_binder(session) -> dict:
         for k in list(app.keys()):
             app[k] = sorted(set(app[k]))
         arity = len(app.keys())
-        meta = {"arity": arity}
+        meta: Dict[str, Any] = {"arity": arity}
         if rec["template"]:
             meta["template"] = rec["template"]
+        if rec.get("placement") is not None:
+            meta["placement"] = rec["placement"]
+        if rec.get("bind_style") is not None:
+            meta["bind_style"] = rec["bind_style"]
+        if rec.get("clause_phase") is not None:
+            meta["clause_phase"] = rec["clause_phase"]
+        if rec.get("phase_index") is not None:
+            meta["phase_index"] = rec["phase_index"]
         if app:
             meta["applicable_types"] = app
         functions[str(rec["name"])] = meta
 
-    connectors = {}
-    for rec in _connector_rows():
-        connectors[str(rec["n"])] = str(rec["s"] or rec["n"])
+    connectors = {str(rec["n"]): str(rec["s"] or rec["n"]) for rec in _connector_rows()}
 
     return {
         "catalogs": {
@@ -613,14 +718,7 @@ def synth_binder(session) -> dict:
     }
 
 def synth_grammar(session) -> str:
-    # ----- helpers that fully consume results inside tx -----
-    def _has_select() -> bool:
-        return session.execute_read(
-            lambda tx: tx.run(
-                "MATCH (ct:CanonicalTerm {name:'select'}) RETURN count(ct) AS n"
-            ).value()[0]
-        ) > 0
-
+    # ----- helpers -----
     def _connector_rows() -> List[Dict[str, Any]]:
         return session.execute_read(
             lambda tx: tx.run(
@@ -640,12 +738,12 @@ def synth_grammar(session) -> str:
             ).data()
         )
 
-    def _expr_pred_rows() -> List[Dict[str, Any]]:
+    def _expr_pred_clause_rows() -> List[Dict[str, Any]]:
         return session.execute_read(
             lambda tx: tx.run(
                 """
                 MATCH (nt:Nonterminal)-[:HAS_RULE]->(r:Rule)
-                WHERE nt.name IN ['Expression','Predicate']
+                WHERE nt.name IN ['Expression','Predicate','Clause']
                 RETURN nt.name AS nt, r.text AS text, r.canonical AS can
                 ORDER BY nt, can
                 """
@@ -656,38 +754,29 @@ def synth_grammar(session) -> str:
     lines: List[str] = []
     lines.append("// Auto-generated Lark grammar from graph\n")
 
-    # Keep test/dummy-session ordering stable (we ignore result, but consume a read)
-    _ = _has_select()
-
-    # Terminals: always SELECT; then connectors; inject FROM/COMMA if missing
+    # Terminals
     terminals: List[str] = ['SELECT: "select"i']
     connectors: Dict[str, str] = {}
-
     for rec in _connector_rows():
         n, s = str(rec["n"]), str(rec["s"] or rec["n"])
         lit = s.replace('"', '\\"')
         connectors[n] = s
         terminals.append(f'{n}: "{lit}"i')
 
-    if "FROM" not in connectors:
-        connectors["FROM"] = "from"
-        terminals.append('FROM: "from"i')
-    if "COMMA" not in connectors:
-        connectors["COMMA"] = ","
-        terminals.append('COMMA: ","')
+    # Ensure basic terminals exist
+    for name, lit in (("FROM", "from"), ("COMMA", ","), ("OF", "of"), ("AND", "and"), ("OR", "or"), ("NOT", "not")):
+        if name not in connectors:
+            terminals.append(f'{name}: "{lit}"i')
+            connectors[name] = lit
 
     # Header terminals
-    for t in terminals:
-        lines.append(t)
-    if terminals:
-        lines.append("")
+    lines.extend(terminals)
+    lines.append("")
+    lines.append("%import common.WS")
+    lines.append("%ignore WS")
+    lines.append("")
 
-    # NEW: Ignore whitespace so "SELECT FROM" parses as two tokens
-    lines.append("%import common.WS")    # NEW
-    lines.append("%ignore WS")           # NEW
-    lines.append("")                     # NEW
-
-    # Basic tokens (no zero-width regex)
+    # base tokens
     lines.append(
         r"""
 NAME: /[A-Za-z_][A-Za-z0-9_]*/
@@ -701,9 +790,6 @@ COLUMNS: COLUMN (COMMA COLUMN)*
 
     lines.append("start: query\n")
 
-    surf_of = {k: connectors.get(k, k).lower() for k in ("FROM", "OF", "AND", "OR")}
-    NONTERMS_KEEP = {"COLUMNS", "TABLE", "VALUE", "constraints", "COLUMN", "NAME"}
-
     def rewrite_body(text: str) -> str:
         body = text or ""
         body = body.replace("{columns}", "COLUMNS")
@@ -714,45 +800,49 @@ COLUMNS: COLUMN (COMMA COLUMN)*
 
         toks = re.findall(r"[A-Za-z_]+|>=|<=|!=|=|>|<|[,]", body)
         out: List[str] = []
+        surf_of = {k: connectors.get(k, k).lower() for k in ("FROM", "OF", "AND", "OR")}
         for tok in toks:
             low = tok.lower()
             if low == "select":
                 out.append("SELECT")
-            elif low == surf_of.get("FROM"):
+            elif low == surf_of.get("from"):
                 out.append("FROM")
-            elif low == surf_of.get("OF"):
+            elif low == surf_of.get("of"):
                 out.append("OF")
-            elif low == surf_of.get("AND"):
+            elif low == surf_of.get("and"):
                 out.append("AND")
-            elif low == surf_of.get("OR"):
+            elif low == surf_of.get("or"):
                 out.append("OR")
             elif tok in (">=", "<=", "!=", "=", ">", "<"):
                 out.append(f'"{tok}"')
             elif tok == ",":
                 out.append("COMMA")
-            elif tok in NONTERMS_KEEP:
-                out.append(tok)
             elif tok.islower():
-                out.append(tok)
+                out.append(f'"{low}"')
             else:
                 out.append(f'"{low}"')
         return " ".join(out)
 
+    # Query: global select template (with constraints/clauses) + expression form (also with constraints/clauses)
     sel_rows = _select_rule_rows()
     if sel_rows and sel_rows[0].get("t"):
-        lines.append(f"query: {rewrite_body(sel_rows[0]['t'])} constraints | SELECT FROM")
+        lines.append(f"query: {rewrite_body(sel_rows[0]['t'])} constraints clauses | SELECT expression FROM constraints clauses | SELECT FROM")
     else:
-        lines.append("query: SELECT FROM")
+        lines.append("query: SELECT expression FROM constraints clauses | SELECT FROM")
 
+    # Bodies
     expr_bodies: List[str] = []
     pred_bodies: List[str] = []
-    for rec in _expr_pred_rows():
+    clause_bodies: List[str] = []
+    for rec in _expr_pred_clause_rows():
         nt = rec["nt"]
         body = rewrite_body(str(rec["text"]))
         if nt == "Expression":
             expr_bodies.append(body)
         elif nt == "Predicate":
             pred_bodies.append(body)
+        elif nt == "Clause":
+            clause_bodies.append(body)
 
     def _uniq(seq: List[str]) -> List[str]:
         seen = set()
@@ -765,18 +855,22 @@ COLUMNS: COLUMN (COMMA COLUMN)*
 
     expr_bodies = _uniq(expr_bodies)
     pred_bodies = _uniq(pred_bodies)
+    clause_bodies = _uniq(clause_bodies)
 
     if expr_bodies:
         lines.append("\nexpression: " + " | ".join(expr_bodies))
     if pred_bodies:
         lines.append("\npredicate: " + " | ".join(pred_bodies))
-
-    # constraints (epsilon or optional chain)
-    if pred_bodies:
-        lines.append("\nconstraints: (predicate (AND predicate)*)?")
+        # allow optional NOT before each predicate; allow AND/OR chains
+        lines.append("\npred_atom: (NOT)? predicate")
+        lines.append("\nconstraints: (pred_atom ((AND|OR) pred_atom)*)?")
     else:
         lines.append("\nconstraints:")
 
+    if clause_bodies:
+        lines.append("\nclause: " + " | ".join(clause_bodies))
+        lines.append("\nclauses: (clause)*")
+    else:
+        lines.append("\nclauses:")
+
     return "\n".join(lines) + "\n"
-
-

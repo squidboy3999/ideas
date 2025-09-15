@@ -8,18 +8,35 @@ from typing import Any, Dict, List, Tuple, Optional
 
 from lark import Lark, UnexpectedInput
 
-# NEW: SQL helpers
+# --- SQL helpers ---
 from .sql_helpers import (
     build_select_sql_from_slots,
     execute_sqlite,
 )
 
-ART_DIR = Path(os.environ.get("ARTIFACTS_DIR", "out"))
+# --- runtime helpers (all Python, no bash) ---
+from .runtime_helper import (
+    resolve_artifact_paths,
+    ensure_artifacts,
+    execute_parse,
+    attach_sql_if_requested,
+    CaseExpectations,
+    StepResult,
+    validate_parse_case_payload,
+    validate_sql_case_payload,
+)
 
-# Strictly use graph_* artifacts (no h_* fallbacks)
-VOCAB_PATH   = ART_DIR / "graph_vocabulary.yaml"
-BINDER_PATH  = ART_DIR / "graph_binder.yaml"
-GRAMMAR_PATH = ART_DIR / "graph_grammar.lark"
+# --- NLP / harvesting moved out ---
+from .runtime_nlp import (
+    tokenize, is_number, is_quoted_string,
+    LexEntry, MatchSpan,
+    build_lexicon_and_connectors,
+    infer_column_types, build_schema_indices,
+    build_index, match_aliases,
+    gather_tables_columns, collect_actions, harvest_constraints
+)
+
+ART_DIR = Path(os.environ.get("ARTIFACTS_DIR", "out"))
 
 # ----------------- IO helpers -----------------
 def must_load_yaml(path: Path) -> Dict[str, Any]:
@@ -34,40 +51,7 @@ def must_load_text(path: Path) -> str:
         raise SystemExit(f"Missing required artifact: {path}")
     return path.read_text(encoding="utf-8")
 
-# ----------------- tokenization -----------------
-TOKEN_RE = re.compile(r"[A-Za-z0-9_]+|[,]")
-
-def tokenize(text: str) -> List[str]:
-    s = (text or "").strip().lower()
-    if not s:
-        return []
-    return TOKEN_RE.findall(s)
-
-def is_number(tok: str) -> bool:
-    return bool(re.fullmatch(r"\d+(\.\d+)?", tok))
-
-def is_quoted_string(raw: str) -> Optional[str]:
-    raw = raw.strip()
-    if len(raw) >= 2 and ((raw[0] == raw[-1] == '"') or (raw[0] == raw[-1] == "'")):
-        return raw[1:-1]
-    return None
-
 # ----------------- data structures -----------------
-@dataclass
-class LexEntry:
-    tokens: Tuple[str, ...]
-    canonical: str
-    role: Optional[str]
-    surface: str
-
-@dataclass
-class MatchSpan:
-    start: int
-    end: int
-    canonical: str
-    role: Optional[str]
-    surface: str
-
 @dataclass
 class RuntimeResult:
     canonical_tokens: List[str]
@@ -78,202 +62,6 @@ class RuntimeResult:
     warnings: List[str] = field(default_factory=list)
     tree: Optional[str] = None  # textual tree on demand
 
-# ----------------- vocabulary loader -----------------
-KW_SECTIONS_WITH_ALIASES = [
-    ("select_verbs", "select_verb", True),   # nested: {"select": {aliases: [...]}}
-    ("prepositions", "preposition", False),
-    ("logical_operators", "logical", False),
-    ("comparison_operators", "comparator", False),
-    ("filler_words", "filler", False),
-    ("connectors", "connector", False),
-]
-ACTION_SECTIONS_WITH_ALIASES = [
-    ("sql_actions", "sql_action"),
-    ("postgis_actions", "postgis_action"),
-]
-
-def _to_alias_list(ent: Any) -> List[str]:
-    if isinstance(ent, dict):
-        aliases = ent.get("aliases")
-        if aliases is None:
-            surf = ent.get("surface")
-            return [surf] if isinstance(surf, str) else []
-        if isinstance(aliases, str):
-            return [aliases]
-        if isinstance(aliases, list):
-            return [a for a in aliases if isinstance(a, str)]
-        return []
-    if isinstance(ent, list):
-        return [a for a in ent if isinstance(a, str)]
-    if isinstance(ent, str):
-        return [ent]
-    return []
-
-def build_lexicon_and_connectors(vocab_yaml: Dict[str, Any]) -> Tuple[List[LexEntry], Dict[str, str]]:
-    lexicon: List[LexEntry] = []
-    connectors_map: Dict[str, str] = {}  # Canonical (e.g., AND) -> surface (e.g., "and")
-
-    kw = (vocab_yaml.get("keywords") or {})
-    # keywords.* sections
-    for section, role, is_nested in KW_SECTIONS_WITH_ALIASES:
-        sec = kw.get(section) or {}
-        if not isinstance(sec, dict):
-            continue
-        if section == "connectors":
-            # {AND: "and"} or {AND: {surface:"and"}}
-            for cname, v in sec.items():
-                can = str(cname)
-                surface = v.get("surface") if isinstance(v, dict) else v
-                if isinstance(surface, str) and surface.strip():
-                    connectors_map[can] = surface.strip()
-                    toks = tuple(tokenize(surface))
-                    if toks:
-                        lexicon.append(LexEntry(tokens=toks, canonical=can, role="connector", surface=surface))
-        elif is_nested:
-            for canonical, ent in sec.items():
-                can = str(canonical)
-                for surf in _to_alias_list(ent):
-                    toks = tuple(tokenize(surf))
-                    if toks:
-                        lexicon.append(LexEntry(tokens=toks, canonical=can, role=role, surface=surf))
-        else:
-            for canonical, ent in sec.items():
-                can = str(canonical)
-                for surf in _to_alias_list(ent):
-                    toks = tuple(tokenize(surf))
-                    if toks:
-                        lexicon.append(LexEntry(tokens=toks, canonical=can, role=role, surface=surf))
-    # top-level actions
-    for section, role in ACTION_SECTIONS_WITH_ALIASES:
-        sec = (vocab_yaml.get(section) or {})
-        if not isinstance(sec, dict):
-            continue
-        for canonical, ent in sec.items():
-            can = str(canonical)
-            for surf in _to_alias_list(ent):
-                toks = tuple(tokenize(surf))
-                if toks:
-                    lexicon.append(LexEntry(tokens=toks, canonical=can, role=role, surface=surf))
-    return lexicon, connectors_map
-
-# ----------------- binder loader -----------------
-def iter_tables(tbls: Any):
-    if isinstance(tbls, dict):
-        for tname in tbls.keys():
-            yield str(tname)
-    elif isinstance(tbls, list):
-        for tname in tbls:
-            yield str(tname)
-
-def infer_column_types(cinfo: Dict[str, Any], col_name: str) -> List[str]:
-    """Map int/float/decimal → numeric unless 'id' is present in name/labels."""
-    want: List[str] = []
-    sl = cinfo.get("slot_types")
-    if isinstance(sl, list):
-        want.extend([str(x) for x in sl if isinstance(x, (str, int, float, bool))])
-    hints: List[str] = []
-    for k in ("types", "labels"):
-        v = cinfo.get(k)
-        if isinstance(v, list):
-            hints.extend([str(x) for x in v if isinstance(x, (str, int, float, bool))])
-    for k in ("type", "data_type", "category"):
-        v = cinfo.get(k)
-        if isinstance(v, str):
-            hints.append(v)
-
-    hints_norm = [x.strip().lower().replace(" ", "_") for x in hints]
-    name_norm = (col_name or "").lower()
-    looks_id = ("id" in name_norm) or any(h.lower() == "id" for h in hints)
-
-    mapped: List[str] = []
-    for h in hints_norm:
-        if (not looks_id) and h in ("int","integer","bigint","smallint","float","double","real","decimal","numeric"):
-            mapped.append("numeric")
-        else:
-            mapped.append(h)
-
-    if looks_id:
-        mapped.append("id")
-
-    all_types = set([t.strip().lower().replace(" ", "_") for t in want + mapped if isinstance(t, str)])
-    return sorted(all_types)
-
-
-def build_schema_indices(binder_yaml: Dict[str, Any]) -> Tuple[Dict[str, str], Dict[str, str], Dict[str, List[str]]]:
-    catalogs = (binder_yaml.get("catalogs") or {})
-    tables = catalogs.get("tables") or {}
-    columns = catalogs.get("columns") or {}
-
-    tables_by_lc: Dict[str, str] = {t.lower(): t for t in iter_tables(tables)}
-    columns_by_lc: Dict[str, str] = {}
-    column_types: Dict[str, List[str]] = {}
-
-    for k, cinfo in (columns or {}).items():
-        if not isinstance(cinfo, dict):
-            continue
-        if "." in k:
-            tname, base = k.split(".", 1)
-            table = cinfo.get("table") or tname
-            base_col = base
-        else:
-            table = cinfo.get("table") or ""
-            base_col = k
-        fqn = f"{table}.{base_col}" if table else base_col
-        columns_by_lc[base_col.lower()] = fqn
-        column_types[fqn] = infer_column_types(cinfo, base_col)
-    return tables_by_lc, columns_by_lc, column_types
-
-# ----------------- greedy matcher -----------------
-def build_index(lexicon: List[LexEntry]) -> Tuple[Dict[int, Dict[Tuple[str, ...], List[LexEntry]]], int]:
-    by_len: Dict[int, Dict[Tuple[str, ...], List[LexEntry]]] = {}
-    max_len = 1
-    for le in lexicon:
-        L = len(le.tokens)
-        if L == 0: continue
-        max_len = max(max_len, L)
-        by_len.setdefault(L, {}).setdefault(le.tokens, []).append(le)
-    return by_len, max_len
-
-ROLE_PRIORITY = {
-    "connector": 5,
-    "comparator": 4,
-    "sql_action": 4,
-    "postgis_action": 4,
-    "select_verb": 3,
-    "preposition": 2,
-    "filler": 1,
-    None: 0,
-}
-
-def choose_best(entries: List[LexEntry]) -> LexEntry:
-    best = entries[0]
-    best_score = (ROLE_PRIORITY.get(best.role, 0), best.canonical.isupper())
-    for e in entries[1:]:
-        score = (ROLE_PRIORITY.get(e.role, 0), e.canonical.isupper())
-        if score > best_score:
-            best, best_score = e, score
-    return best
-
-def match_aliases(tokens: List[str], by_len: Dict[int, Dict[Tuple[str, ...], List[LexEntry]]], max_len: int) -> List[MatchSpan]:
-    i = 0
-    spans: List[MatchSpan] = []
-    n = len(tokens)
-    while i < n:
-        chosen: Optional[MatchSpan] = None
-        for L in range(min(max_len, n - i), 0, -1):
-            window = tuple(tokens[i: i + L])
-            cand = by_len.get(L, {}).get(window)
-            if cand:
-                best = choose_best(cand)
-                chosen = MatchSpan(start=i, end=i + L, canonical=best.canonical, role=best.role, surface=best.surface)
-                break
-        if chosen:
-            spans.append(chosen)
-            i = chosen.end
-        else:
-            i += 1
-    return spans
-
 # ----------------- slots & canonicalization -----------------
 def harvest_and_canonicalize(raw: str,
                              tokens: List[str],
@@ -281,6 +69,12 @@ def harvest_and_canonicalize(raw: str,
                              tables_by_lc: Dict[str, str],
                              columns_by_lc: Dict[str, str],
                              connectors_map: Dict[str, str]) -> RuntimeResult:
+    """
+    Build canonical tokens and slots.
+    - Keeps previous behavior for SELECT/FROM + projection actions.
+    - Does NOT inject constraint tokens; the grammar can stay permissive for now.
+    - Adds slots['constraints'] with comparator-derived predicates (builder renders WHERE).
+    """
     canonicals: List[str] = []
     for s in spans:
         if s.role == "filler":
@@ -291,34 +85,55 @@ def harvest_and_canonicalize(raw: str,
             canon = s.canonical
         canonicals.append(canon)
 
-    values: List[str] = []
-    for m in re.finditer(r"(['\"]).*?\1", raw):
-        inner = is_quoted_string(m.group(0))
-        if inner is not None:
-            values.append(inner)
-    for t in tokens:
-        if is_number(t):
-            values.append(t)
+    found_tables, found_columns = gather_tables_columns(tokens, tables_by_lc, columns_by_lc)
+    table = (found_tables[0] if found_tables else None)
 
-    found_tables: List[str] = []
-    found_columns: List[str] = []
-    for t in tokens:
-        if t in tables_by_lc:
-            found_tables.append(tables_by_lc[t])
-        if t in columns_by_lc:
-            found_columns.append(columns_by_lc[t])
-
-    slots = {
-        "table": (found_tables[0] if found_tables else None),
+    slots: Dict[str, Any] = {
+        "table": table,
         "columns": sorted(set(found_columns)),
-        "values": values,
+        "values": [],  # values are only needed by actions; constraints supply their own
     }
 
+    proj_actions, clause_actions, _comparators = collect_actions(spans)
+    if proj_actions:
+        slots["actions"] = proj_actions
+    if clause_actions:
+        slots["clause_actions"] = clause_actions
+
+    # Ensure FROM if SELECT present
     has_select = any(c == "SELECT" for c in canonicals)
     has_from   = any(c == "FROM" for c in canonicals)
     if has_select and not has_from:
         canonicals.append("FROM")
+        has_from = True
 
+    # Insert VALUE only for projection actions (never for plain SELECT FROM)
+    if proj_actions:
+        try:
+            from_idx = canonicals.index("FROM")
+        except ValueError:
+            from_idx = len(canonicals)
+        insert_at: Optional[int] = None
+        if "OF" in canonicals:
+            of_idx = canonicals.index("OF")
+            if of_idx < from_idx:
+                insert_at = of_idx + 1
+        if insert_at is None:
+            first_action = proj_actions[0]
+            try:
+                act_idx = canonicals.index(first_action)
+            except ValueError:
+                act_idx = from_idx
+            insert_at = min(act_idx + 1, from_idx)
+        if "VALUE" not in canonicals:
+            canonicals.insert(insert_at, "VALUE")
+
+    # Constraints harvesting (now with normalized logicals inside the helper)
+    constraints, c_warnings = harvest_constraints(raw, tokens, spans, columns_by_lc, table)
+    if constraints:
+        slots["constraints"] = constraints
+
+    # Unmapped tokens (informational)
     covered = set()
     for s in spans:
         covered.update(range(s.start, s.end))
@@ -326,6 +141,7 @@ def harvest_and_canonicalize(raw: str,
     warnings: List[str] = []
     if unmapped:
         warnings.append(f"Unmapped tokens: {unmapped}")
+    warnings.extend(c_warnings)
 
     return RuntimeResult(
         canonical_tokens=canonicals,
@@ -370,104 +186,369 @@ def map_text(text: str,
     if not ok and err:
         res.warnings.append(f"Grammar parse failed: {err}")
 
-    # NOTE: SQL generation/execution is handled in main() to avoid
-    # doing it twice (env + CLI) and to keep map_text pure.
     return res
 
+# ----------------- Public test APIs (unchanged) -----------------
+@dataclass
+class ParseCase:
+    label: str
+    utterance: str
+    tokens_regex: str
+    want_parse_ok: bool
+
+@dataclass
+class SQLCase:
+    label: str
+    utterance: str
+    tokens_regex: str
+    min_rows: int
+
+def _normalize_regex(rx: str) -> str:
+    s = (rx or "").strip()
+    if len(s) >= 3 and s[0] in ("r", "R") and s[1] in ('"', "'") and s[-1] == s[1]:
+        return s[2:-1]
+    if s and s[0] in ("r", "R"):
+        if len(s) == 1:
+            return s
+        nxt = s[1]
+        if nxt in ("^", "$", "(", "[", ".", "\\", "|", "?", "*", "+"):
+            return s[1:]
+        if nxt.isspace():
+            return s[1:].lstrip()
+    return s
+
+def run_parse_case(
+    *,
+    vocab_yaml: Dict[str, Any],
+    binder_yaml: Dict[str, Any],
+    grammar_text: str,
+    case: ParseCase
+) -> Tuple[StepResult, Dict[str, Any]]:
+    _step, payload = execute_parse(
+        map_text=map_text,
+        text=case.utterance,
+        vocab_yaml=vocab_yaml,
+        binder_yaml=binder_yaml,
+        grammar_text=grammar_text,
+        want_tree=False,
+    )
+    res = validate_parse_case_payload(
+        payload,
+        CaseExpectations(tokens_regex=_normalize_regex(case.tokens_regex), want_parse_ok=case.want_parse_ok),
+    )
+    return res, payload
+
+def run_sql_case(
+    *,
+    vocab_yaml: Dict[str, Any],
+    binder_yaml: Dict[str, Any],
+    grammar_text: str,
+    db_path: Optional[str],
+    limit: int,
+    case: SQLCase
+) -> Tuple[StepResult, Dict[str, Any]]:
+    _step, payload = execute_parse(
+        map_text=map_text,
+        text=case.utterance,
+        vocab_yaml=vocab_yaml,
+        binder_yaml=binder_yaml,
+        grammar_text=grammar_text,
+        want_tree=False,
+    )
+    attach_sql_if_requested(
+        payload=payload,
+        parse_ok=bool(payload.get("parse_ok")),
+        want_sql=True,
+        db_path=db_path,
+        limit=limit,
+        binder_yaml=binder_yaml,
+        build_select_sql_from_slots=build_select_sql_from_slots,
+        execute_sqlite=execute_sqlite,
+    )
+    res = validate_sql_case_payload(
+        payload,
+        CaseExpectations(tokens_regex=_normalize_regex(case.tokens_regex), min_rows=case.min_rows),
+    )
+    return res, payload
+
+def run_tests(
+    *,
+    vocab_yaml: Dict[str, Any],
+    binder_yaml: Dict[str, Any],
+    grammar_text: str,
+    db_path: Optional[str],
+    limit: int,
+    parse_cases: List[ParseCase],
+    sql_cases: List[SQLCase],
+) -> Tuple[int, Dict[str, int]]:
+    totals = dict(total=0, ok_pass=0, ok_fail=0, unexpected_fail=0, unexpected_success=0)
+    def print_parse(label: str, payload: Dict[str, Any], res: StepResult):
+        joined = " ".join(payload.get("canonical_tokens") or [])
+        table = ((payload.get("slots") or {}).get("table")) or ""
+        print(f"   TOKENS: {joined}")
+        print(f"   TABLE:  {table or '<none>'}")
+        print(f"   PARSE:  {'true' if payload.get('parse_ok') else 'false'}")
+        if res.warnings:
+            print("   WARNINGS:")
+            for w in res.warnings:
+                print(f"     - {w}")
+
+    def print_sql(payload: Dict[str, Any]):
+        sql_block = payload.get("sql") or {}
+        sql_query = sql_block.get("query") or ""
+        rowcount = int(sql_block.get("rowcount") or 0)
+        print(f"   SQL:    {sql_query or '<none>'}")
+        print(f"   ROWS:   {rowcount}")
+
+    for i, c in enumerate(parse_cases, 1):
+        print(f"\n── Test #{i} [parse] {c.label}\n   NL:   {c.utterance}")
+        res, payload = run_parse_case(
+            vocab_yaml=vocab_yaml, binder_yaml=binder_yaml, grammar_text=grammar_text, case=c
+        )
+        print_parse(c.label, payload, res)
+        ok_expected = c.want_parse_ok
+        totals["total"] += 1
+        if ok_expected and res.ok:
+            totals["ok_pass"] += 1
+            print("   ✅ PASS")
+        elif (not ok_expected) and (not bool(payload.get("parse_ok"))):
+            totals["ok_fail"] += 1
+            print("   ✅ EXPECTED FAIL")
+        else:
+            totals["unexpected_fail"] += 1
+            print("   ❌ UNEXPECTED RESULT")
+
+    base = len(parse_cases)
+    for j, c in enumerate(sql_cases, 1):
+        idx = base + j
+        print(f"\n── Test #{idx} [sql] {c.label}\n   NL:   {c.utterance}")
+        res, payload = run_sql_case(
+            vocab_yaml=vocab_yaml, binder_yaml=binder_yaml, grammar_text=grammar_text,
+            db_path=db_path, limit=limit, case=c
+        )
+        print_parse(c.label, payload, res)
+        print_sql(payload)
+        totals["total"] += 1
+        if res.ok:
+            totals["ok_pass"] += 1
+            print("   ✅ PASS")
+        else:
+            totals["unexpected_fail"] += 1
+            print("   ❌ FAIL")
+
+    print("\n==================== SUMMARY ====================")
+    print(f"Total tests:        {totals['total']}")
+    print(f"Expected PASS ok:   {totals['ok_pass']}")
+    print(f"Expected FAIL ok:   {totals['ok_fail']}")
+    print(f"Unexpected FAIL(s): {totals['unexpected_fail']}")
+    print(f"Unexpected SUCC(s): {totals['unexpected_success']}")
+    exit_code = 0 if (totals["unexpected_fail"] == 0 and totals["unexpected_success"] == 0) else 1
+    return exit_code, totals
+
 # ----------------- CLI -----------------
+def _parse_bool(s: str) -> bool:
+    return str(s).strip().lower() in ("1","true","t","yes","y","ok")
+
+def _print_usage() -> None:
+    print(
+        'Usage: vbg_runtime "NL query" [--json] [--tree] [--sql] [--db PATH] [--limit N]\n'
+        "       vbg_runtime [--db PATH] --test-case LABEL NL REGEX True|False [--test-case ...]\n"
+        "       vbg_runtime [--db PATH] --test-sql-case LABEL NL REGEX MIN_ROWS [--test-sql-case ...]\n",
+        file=sys.stderr,
+    )
+
+@dataclass
+class _CLIParsed:
+    as_json: bool
+    want_tree: bool
+    want_sql: bool
+    limit: int
+    db_path: Optional[str]
+    args: List[str]
+    parse_cases: List["ParseCase"]
+    sql_cases: List["SQLCase"]
+
+def _parse_cli_argv(argv: List[str]) -> _CLIParsed | Tuple[None, str]:
+    args = list(argv)
+    as_json   = "--json" in args
+    want_tree = "--tree" in args
+    want_sql  = "--sql"  in args
+    args = [a for a in args if a not in ("--json", "--tree", "--sql")]
+
+    limit = 50
+    if "--limit" in args:
+        try:
+            i = args.index("--limit")
+            limit = int(args[i + 1])
+            del args[i : i + 2]
+        except Exception:
+            return None, "Invalid --limit value"
+
+    db_path: Optional[str] = None
+    if "--db" in args:
+        try:
+            i = args.index("--db")
+            db_path = args[i + 1]
+            del args[i : i + 2]
+        except Exception:
+            return None, "Missing path after --db"
+
+    parse_cases: List[ParseCase] = []
+    sql_cases: List[SQLCase] = []
+    i = 0
+    while i < len(args):
+        a = args[i]
+        if a == "--test-case":
+            if i + 4 >= len(args):
+                return None, "Error: --test-case requires 4 arguments: LABEL NL REGEX True|False"
+            label, nl, rx, want = args[i + 1], args[i + 2], args[i + 3], args[i + 4]
+            parse_cases.append(ParseCase(label, nl, rx, _parse_bool(want)))
+            del args[i : i + 5]
+            continue
+        elif a == "--test-sql-case":
+            if i + 4 >= len(args):
+                return None, "Error: --test-sql-case requires 4 arguments: LABEL NL REGEX MIN_ROWS"
+            label, nl, rx, min_rows_s = args[i + 1], args[i + 2], args[i + 3], args[i + 4]
+            try:
+                min_rows = int(min_rows_s)
+            except ValueError:
+                return None, "Error: MIN_ROWS must be an integer"
+            sql_cases.append(SQLCase(label, nl, rx, min_rows))
+            del args[i : i + 5]
+            continue
+        i += 1
+
+    return _CLIParsed(
+        as_json=as_json,
+        want_tree=want_tree,
+        want_sql=want_sql,
+        limit=limit,
+        db_path=db_path,
+        args=args,
+        parse_cases=parse_cases,
+        sql_cases=sql_cases,
+    )
+
+def _ensure_and_load_artifacts() -> Tuple[Dict[str, Any], Dict[str, Any], str] | Tuple[None, None, None]:
+    from .runtime_helper import resolve_artifact_paths, ensure_artifacts
+    ap = resolve_artifact_paths(str(ART_DIR))
+    auto_build = os.environ.get("AUTO_BUILD_ARTIFACTS", "1") not in ("0", "false", "False")
+    step = ensure_artifacts(ap, auto_build=auto_build)
+    if not step.ok:
+        print(f"[artifacts.ensure] failed: {step.info}", file=sys.stderr)
+        return None, None, None
+    vocab_yaml   = must_load_yaml(Path(ap.vocab_path))
+    binder_yaml  = must_load_yaml(Path(ap.binder_path))
+    grammar_text = must_load_text(Path(ap.grammar_path))
+    return vocab_yaml, binder_yaml, grammar_text
+
+def _run_single_query(
+    *,
+    text: str,
+    as_json: bool,
+    want_tree: bool,
+    want_sql: bool,
+    db_path_opt: Optional[str],
+    limit: int,
+    vocab_yaml: Dict[str, Any],
+    binder_yaml: Dict[str, Any],
+    grammar_text: str,
+) -> int:
+    _step_parse, payload = execute_parse(
+        map_text=map_text,
+        text=text,
+        vocab_yaml=vocab_yaml,
+        binder_yaml=binder_yaml,
+        grammar_text=grammar_text,
+        want_tree=want_tree,
+    )
+    res_parse_ok = bool(payload.get("parse_ok", False))
+
+    env_db = os.environ.get("DB_PATH", "").strip()
+    use_db = db_path_opt or (env_db if env_db else None)
+    if res_parse_ok and (want_sql or use_db):
+        attach_sql_if_requested(
+            payload=payload,
+            parse_ok=res_parse_ok,
+            want_sql=True,
+            db_path=use_db,
+            limit=limit,
+            binder_yaml=binder_yaml,
+            build_select_sql_from_slots=build_select_sql_from_slots,
+            execute_sqlite=execute_sqlite,
+        )
+
+    if not as_json:
+        print("CANONICAL TOKENS:", " ".join(payload.get("canonical_tokens") or []))
+        print("PARSE:", "OK" if payload.get("parse_ok") else "FAIL")
+        print("SLOTS:")
+        print(json.dumps(payload.get("slots") or {}, indent=2))
+        if "sql" in payload:
+            print("SQL:", (payload["sql"] or {}).get("query") or "")
+            if "rows" in (payload["sql"] or {}):
+                print(f'ROWS ({(payload["sql"] or {}).get("rowcount") or 0}):')
+                print(json.dumps((payload["sql"] or {}).get("rows") or [], indent=2))
+        warnings = payload.get("warnings") or []
+        if warnings:
+            print("WARNINGS:", *warnings, sep="\n- ")
+        if want_tree and "tree" in payload:
+            print("\nPARSE TREE:\n")
+            print(payload["tree"])
+    else:
+        print(json.dumps(payload, indent=2))
+
+    return 0
+
 def main(argv: Optional[List[str]] = None) -> int:
     argv = argv or sys.argv[1:]
     if not argv:
-        print("Usage: vbg_graph_runtime \"natural language query\" [--json] [--tree] [--sql] [--db PATH] [--limit N]\n", file=sys.stderr)
+        print(
+            'Usage: vbg_runtime "NL query" [--json] [--tree] [--sql] [--db PATH] [--limit N]\n'
+            "       vbg_runtime [--db PATH] --test-case LABEL NL REGEX True|False [--test-case ...]\n"
+            "       vbg_runtime [--db PATH] --test-sql-case LABEL NL REGEX MIN_ROWS [--test-sql-case ...]\n",
+            file=sys.stderr,
+        )
         return 2
 
-    as_json = "--json" in argv
-    want_tree = "--tree" in argv
-    want_sql = "--sql" in argv
+    parsed = _parse_cli_argv(argv)
+    if isinstance(parsed, tuple) and parsed[0] is None:
+        _, msg = parsed
+        print(msg, file=sys.stderr)
+        return 2
+    assert isinstance(parsed, _CLIParsed)
 
-    # parse limit
-    limit = 50
-    if "--limit" in argv:
-        try:
-            i = argv.index("--limit")
-            limit = int(argv[i+1])
-            argv = argv[:i] + argv[i+2:]
-        except Exception:
-            print("Invalid --limit value", file=sys.stderr)
-            return 2
+    vocab_yaml, binder_yaml, grammar_text = _ensure_and_load_artifacts()
+    if vocab_yaml is None:
+        return 2
 
-    # parse db
-    db_path: Optional[str] = None
-    if "--db" in argv:
-        try:
-            i = argv.index("--db")
-            db_path = argv[i+1]
-            argv = argv[:i] + argv[i+2:]
-        except Exception:
-            print("Missing path after --db", file=sys.stderr)
-            return 2
+    if parsed.parse_cases or parsed.sql_cases:
+        exit_code, _counts = run_tests(
+            vocab_yaml=vocab_yaml,
+            binder_yaml=binder_yaml,
+            grammar_text=grammar_text,
+            db_path=(parsed.db_path or os.environ.get("DB_PATH") or None),
+            limit=parsed.limit,
+            parse_cases=parsed.parse_cases,
+            sql_cases=parsed.sql_cases,
+        )
+        return exit_code
 
-    # flags cleanup
-    argv = [a for a in argv if a not in ("--json","--tree","--sql")]
-    if not argv:
+    if not parsed.args:
         print("No input text provided.", file=sys.stderr)
         return 2
-    text = " ".join(argv)
 
-    # load artifacts
-    vocab_yaml   = must_load_yaml(VOCAB_PATH)
-    binder_yaml  = must_load_yaml(BINDER_PATH)
-    grammar_text = must_load_text(GRAMMAR_PATH)
-
-    # map to canonical / slots
-    res = map_text(text, vocab_yaml, binder_yaml, grammar_text, want_tree)
-
-    payload = {
-        "canonical_tokens": res.canonical_tokens,
-        "slots": res.slots,
-        "spans": res.spans,
-        "parse_ok": res.parse_ok,
-        "warnings": res.warnings,
-    }
-
-    # ---- Optional SQL ----
-    # If user asked for --sql OR provided db (via flag or env)
-    env_db = os.environ.get("DB_PATH", "").strip()
-    use_db = db_path or (env_db if env_db else None)
-
-    if res.parse_ok and ((want_sql) or use_db):
-        try:
-            sql_stmt = build_select_sql_from_slots(res.slots, binder_yaml, limit=limit)
-            sql_block: Dict[str, Any] = {"query": sql_stmt}
-            if use_db:
-                exec_res = execute_sqlite(use_db, sql_stmt)
-                sql_block.update(exec_res)
-                sql_block["db_path"] = use_db
-            payload["sql"] = sql_block
-        except Exception as e:
-            res.warnings.append(f"SQL error: {e}")
-            payload["warnings"] = res.warnings
-
-    if not as_json:
-        print("CANONICAL TOKENS:", " ".join(res.canonical_tokens))
-        print("PARSE:", "OK" if res.parse_ok else "FAIL")
-        print("SLOTS:")
-        print(json.dumps(res.slots, indent=2))
-        if "sql" in payload:
-            print("SQL:", payload["sql"]["query"])
-            if "rows" in payload["sql"]:
-                print(f'ROWS ({payload["sql"]["rowcount"]}):')
-                print(json.dumps(payload["sql"]["rows"], indent=2))
-        if res.warnings:
-            print("WARNINGS:", *res.warnings, sep="\n- ")
-        if want_tree and res.tree:
-            print("\nPARSE TREE:\n")
-            print(res.tree)
-    else:
-        if want_tree and res.tree:
-            payload["tree"] = res.tree
-        print(json.dumps(payload, indent=2))
-    return 0
+    text = " ".join(parsed.args)
+    return _run_single_query(
+        text=text,
+        as_json=parsed.as_json,
+        want_tree=parsed.want_tree,
+        want_sql=parsed.want_sql,
+        db_path_opt=parsed.db_path,
+        limit=parsed.limit,
+        vocab_yaml=vocab_yaml,
+        binder_yaml=binder_yaml,
+        grammar_text=grammar_text,
+    )
 
 if __name__ == "__main__":
     sys.exit(main())
