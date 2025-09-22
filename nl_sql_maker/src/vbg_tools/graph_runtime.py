@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Tuple, Optional
 
 from lark import Lark, UnexpectedInput
+from types import SimpleNamespace
 
 # --- SQL helpers ---
 from .sql_helpers import (
@@ -63,94 +64,77 @@ class RuntimeResult:
     tree: Optional[str] = None  # textual tree on demand
 
 # ----------------- slots & canonicalization -----------------
-def harvest_and_canonicalize(raw: str,
-                             tokens: List[str],
-                             spans: List[MatchSpan],
-                             tables_by_lc: Dict[str, str],
-                             columns_by_lc: Dict[str, str],
-                             connectors_map: Dict[str, str]) -> RuntimeResult:
+def harvest_and_canonicalize(
+    text: str,
+    tokens: List[str],
+    spans: List["MatchSpan"],
+    tables_by_lc: Dict[str, str],
+    columns_by_lc: Dict[str, str],
+    connectors_map: Dict[str, str],
+):
     """
-    Build canonical tokens and slots.
-    - Keeps previous behavior for SELECT/FROM + projection actions.
-    - Does NOT inject constraint tokens; the grammar can stay permissive for now.
-    - Adds slots['constraints'] with comparator-derived predicates (builder renders WHERE).
+    Build Milestone-B canonical tokens (structure-only) and harvest slots.
+
+    - Canonical contains only grammar terminals & placeholders: SELECT, [ACTION, OF, VALUE], FROM
+      (No raw identifiers like table/column names.)
+    - slots holds table/columns/values/constraints/etc.
+    - We *do not* mark table/column tokens as 'consumed' for the purpose of warnings; unmapped tokens
+      remain visible to help diagnose coverage gaps (matching current tests' expectation).
     """
-    canonicals: List[str] = []
-    for s in spans:
-        if s.role == "filler":
-            continue
-        if s.role == "connector" or s.canonical == "select":
-            canon = s.canonical.upper()
-        else:
-            canon = s.canonical
-        canonicals.append(canon)
+    # 1) Decide presence of SELECT via a select_verb span
+    has_select = any(getattr(s, "role", "") == "select_verb" or s.canonical == "select" for s in spans)
 
-    found_tables, found_columns = gather_tables_columns(tokens, tables_by_lc, columns_by_lc)
-    table = (found_tables[0] if found_tables else None)
+    # 2) Detect first table mention from raw tokens (lowercased)
+    table_lc = None
+    for i, tok in enumerate(tokens):
+        t = tok.lower()
+        if t in tables_by_lc:
+            table_lc = t
+            break
+    table_name = tables_by_lc.get(table_lc) if table_lc else None
 
+    # 3) See if any sql_action (projection) was matched
+    action_span = next((s for s in spans if getattr(s, "role", "") in ("sql_action", "action", "function")), None)
+    action_name = action_span.canonical if action_span else None
+
+    # 4) Canonical tokens (structure only)
+    canonical: List[str] = []
+    if has_select:
+        canonical.append("SELECT")
+    if action_name:
+        canonical.append(action_name)     # action terminals are case-insensitive in the grammar ("i")
+        canonical.append("OF")
+        canonical.append("VALUE")
+    # Always end with FROM
+    canonical.append("FROM")
+
+    # 5) Slots
     slots: Dict[str, Any] = {
-        "table": table,
-        "columns": sorted(set(found_columns)),
-        "values": [],  # values are only needed by actions; constraints supply their own
+        "table": table_name,
+        "columns": [],
+        "values": [],
+        "actions": ([action_name] if action_name else []),
+        "constraints": [],
     }
 
-    proj_actions, clause_actions, _comparators = collect_actions(spans)
-    if proj_actions:
-        slots["actions"] = proj_actions
-    if clause_actions:
-        slots["clause_actions"] = clause_actions
-
-    # Ensure FROM if SELECT present
-    has_select = any(c == "SELECT" for c in canonicals)
-    has_from   = any(c == "FROM" for c in canonicals)
-    if has_select and not has_from:
-        canonicals.append("FROM")
-        has_from = True
-
-    # Insert VALUE only for projection actions (never for plain SELECT FROM)
-    if proj_actions:
-        try:
-            from_idx = canonicals.index("FROM")
-        except ValueError:
-            from_idx = len(canonicals)
-        insert_at: Optional[int] = None
-        if "OF" in canonicals:
-            of_idx = canonicals.index("OF")
-            if of_idx < from_idx:
-                insert_at = of_idx + 1
-        if insert_at is None:
-            first_action = proj_actions[0]
-            try:
-                act_idx = canonicals.index(first_action)
-            except ValueError:
-                act_idx = from_idx
-            insert_at = min(act_idx + 1, from_idx)
-        if "VALUE" not in canonicals:
-            canonicals.insert(insert_at, "VALUE")
-
-    # Constraints harvesting (now with normalized logicals inside the helper)
-    constraints, c_warnings = harvest_constraints(raw, tokens, spans, columns_by_lc, table)
-    if constraints:
-        slots["constraints"] = constraints
-
-    # Unmapped tokens (informational)
+    # 6) Warnings for unmapped tokens (tokens not covered by matched spans)
     covered = set()
     for s in spans:
         covered.update(range(s.start, s.end))
-    unmapped = [t for i, t in enumerate(tokens) if i not in covered and not is_number(t)]
+    unmapped = [tokens[i] for i in range(len(tokens)) if i not in covered]
     warnings: List[str] = []
     if unmapped:
         warnings.append(f"Unmapped tokens: {unmapped}")
-    warnings.extend(c_warnings)
 
-    return RuntimeResult(
-        canonical_tokens=canonicals,
+    # 7) Return a simple object with expected attributes
+    return SimpleNamespace(
+        canonical_tokens=canonical,
         slots=slots,
-        spans=[{"start": s.start, "end": s.end, "surface": s.surface, "canonical": s.canonical, "role": s.role} for s in spans],
-        parse_ok=False,
-        parse_error=None,
         warnings=warnings,
     )
+
+
+
 
 # ----------------- Lark parse -----------------
 def try_parse_with_lark(grammar_text: str, canonical_tokens: List[str], want_tree: bool) -> Tuple[bool, Optional[str], Optional[str]]:
@@ -165,28 +149,73 @@ def try_parse_with_lark(grammar_text: str, canonical_tokens: List[str], want_tre
         return False, f"{type(e).__name__}: {e}", None
 
 # ----------------- core mapping -----------------
-def map_text(text: str,
-             vocab_yaml: Dict[str, Any],
-             binder_yaml: Dict[str, Any],
-             grammar_text: str,
-             want_tree: bool) -> RuntimeResult:
-    lexicon, connectors_map = build_lexicon_and_connectors(vocab_yaml)
-    tables_by_lc, columns_by_lc, _column_types = build_schema_indices(binder_yaml)
+def map_text(
+    text: str,
+    vocabulary: Dict[str, Any],
+    binder_artifact: Dict[str, Any],
+    grammar_text: str,
+    *,
+    want_tree: bool = False
+) -> "RuntimeResult":
+    # 1) Lexicon (+ connectors)
+    blac = build_lexicon_and_connectors
+    res = blac(vocabulary)
+    if isinstance(res, tuple) and len(res) == 2:
+        lex, connectors_map = res
+    else:
+        lex = res
+        connectors_map = (vocabulary.get("keywords") or {}).get("connectors") or {}
 
-    toks = tokenize(text)
-    by_len, max_len = build_index(lexicon)
-    spans = match_aliases(toks, by_len, max_len)
+    # 2) Schema indices
+    tables_by_lc, columns_by_lc, _ = build_schema_indices(binder_artifact)
 
-    res = harvest_and_canonicalize(text, toks, spans, tables_by_lc, columns_by_lc, connectors_map)
+    # 3) Tokenize + match
+    tokens = tokenize(text)
+    by_len, max_len = build_index(lex)
+    spans = match_aliases(tokens, by_len, max_len)
 
-    ok, err, tree = try_parse_with_lark(grammar_text, res.canonical_tokens, want_tree)
-    res.parse_ok = ok
-    res.parse_error = err
-    res.tree = tree
-    if not ok and err:
-        res.warnings.append(f"Grammar parse failed: {err}")
+    # 4) Canonical + base slots
+    harvest = harvest_and_canonicalize(text, tokens, spans, tables_by_lc, columns_by_lc, connectors_map)
 
-    return res
+    # 5) NEW: constraints from NL tail after FROM <table>
+    try:
+        from .runtime_nlp import harvest_constraints as _hc
+        table = harvest.slots.get("table")
+        constraints, warn_c = _hc(text, table, vocabulary, binder_artifact, max_predicates=2)
+        if constraints:
+            harvest.slots["constraints"] = constraints
+        if warn_c:
+            harvest.warnings.extend(warn_c)
+    except Exception as e:
+        harvest.warnings.append(f"constraints_error: {e!r}")
+
+    # 6) Parse canonical with Lark
+    ok, err, tree = try_parse_with_lark(grammar_text, harvest.canonical_tokens, want_tree=want_tree)
+
+    # 7) Package result
+    try:
+        rr = RuntimeResult(
+            canonical_tokens=harvest.canonical_tokens,
+            parse_ok=ok,
+            parse_error=err,
+            tree=tree if want_tree else None,
+            slots=harvest.slots,
+            warnings=harvest.warnings,
+        )
+    except TypeError:
+        from types import SimpleNamespace
+        rr = SimpleNamespace(
+            canonical_tokens=harvest.canonical_tokens,
+            parse_ok=ok,
+            parse_error=err,
+            tree=tree if want_tree else None,
+            slots=harvest.slots,
+            warnings=harvest.warnings,
+        )
+    return rr
+
+
+
 
 # ----------------- Public test APIs (unchanged) -----------------
 @dataclass

@@ -39,9 +39,11 @@ def table_columns_from_binder(binder_yaml: Dict[str, Any], table: str) -> List[s
     cols: List[str] = []
     for fqn, cinfo in columns.items():
         if isinstance(cinfo, dict) and cinfo.get("table") == table:
+            # Prefer explicit 'name'; fallback to base part of FQN
             base = cinfo.get("name")
-            if isinstance(base, str) and base:
-                cols.append(base)
+            if not (isinstance(base, str) and base):
+                base = str(fqn).split(".", 1)[-1]
+            cols.append(base)
     return sorted(set(cols))
 
 
@@ -59,7 +61,8 @@ def _quote_fqn_col(fqn: str) -> str:
 def _looks_numeric(s: Any) -> bool:
     if isinstance(s, (int, float)):
         return True
-    return bool(_re.fullmatch(r"\d+(\.\d+)?", str(s)))
+    # allow optional sign and decimals
+    return bool(_re.fullmatch(r"[+-]?\d+(\.\d+)?", str(s)))
 
 def _sql_lit(v: Any) -> str:
     """Render a Python value as an SQL literal."""

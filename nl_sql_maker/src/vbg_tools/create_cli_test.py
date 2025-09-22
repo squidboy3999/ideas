@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # vbg_tools/create_cli_test.py
 from __future__ import annotations
+
 import os
 import stat
 from pathlib import Path
@@ -193,8 +194,6 @@ def _discover_predicate_smoke(vocab: Dict[str, Any], binder: Dict[str, Any]) -> 
     - avg of <num-col> from <table> <col> > 10
     - sum of <num-col> from <table> <col> >= 5 and <col> < 100
     - count of <id-col> from users age between 18 and 30
-    This requires no 'where' token (grammar attaches constraints directly).
-    If we can’t find suitable columns, returns [].
     """
     catalogs = (binder.get("catalogs") or {})
     columns = (catalogs.get("columns") or {})
@@ -203,7 +202,7 @@ def _discover_predicate_smoke(vocab: Dict[str, Any], binder: Dict[str, Any]) -> 
     AND = conns.get("AND", "and")
     OF = conns.get("OF", "of")
 
-    # pick a table and numeric columns
+    # group columns by table and track slot_types
     by_table: Dict[str, List[Dict[str, Any]]] = {}
     for fqn, meta in columns.items():
         tbl = meta.get("table")
@@ -221,7 +220,6 @@ def _discover_predicate_smoke(vocab: Dict[str, Any], binder: Dict[str, Any]) -> 
                 out.append(c["name"])
         return out
 
-    # Prefer sales/users/regions in that order
     table_order = list(by_table.keys())
     for pref in ("sales", "users", "regions"):
         if pref in by_table:
@@ -230,7 +228,6 @@ def _discover_predicate_smoke(vocab: Dict[str, Any], binder: Dict[str, Any]) -> 
     if not table_order:
         return []
 
-    # Choose table with ≥1 numeric column
     chosen_table = None
     ncols: List[str] = []
     for t in table_order:
@@ -241,7 +238,6 @@ def _discover_predicate_smoke(vocab: Dict[str, Any], binder: Dict[str, Any]) -> 
     if not chosen_table:
         return []
 
-    # Build 2-3 examples
     sel = _first_select_alias(vocab)
 
     preds: List[Dict[str, str]] = []
@@ -309,9 +305,11 @@ RUNTIME="${RUNTIME:-vbg_runtime}"
 echo "Running $(basename "$0") — $(date)"
 echo
 """
+
     chunks: List[str] = []
 
-    # featured
+    # Featured
+    chunks.append("# --- Featured: LIMIT demonstrations ---")
     for idx, t in enumerate(context.get("featured", []), 1):
         chunks.append(
             "\n".join([
@@ -322,7 +320,8 @@ echo
             ])
         )
 
-    # predicate smoke
+    # Predicate smoke
+    chunks.append("# --- Featured: predicate smoke tests (auto-generated) ---")
     offset = len(context.get("featured", []))
     for i, p in enumerate(context.get("preds", []), 1):
         n = offset + i
@@ -335,7 +334,8 @@ echo
             ])
         )
 
-    # gold
+    # Gold
+    chunks.append("# --- Gold surfaces (each a single NL example) ---")
     base = offset + len(context.get("preds", []))
     for i, it in enumerate(context.get("gold", []), 1):
         n = base + i
@@ -349,7 +349,8 @@ echo
             ])
         )
 
-    # multipath
+    # Multipath
+    chunks.append("# --- Multipath surfaces (expected: multiple valid SQL paths) ---")
     base2 = base + len(context.get("gold", []))
     for i, m in enumerate(context.get("multi", []), 1):
         n = base2 + i
@@ -365,7 +366,8 @@ echo
         ]
         chunks.append("\n".join(lines))
 
-    # invalid
+    # Invalid
+    chunks.append("# --- Invalid surfaces (should fail to plan/parse) ---")
     base3 = base2 + len(context.get("multi", []))
     for i, inv in enumerate(context.get("invalid", []), 1):
         n = base3 + i
@@ -402,15 +404,6 @@ def generate_cli_test(
       - gold_surfaces.yml
       - multipath_surfaces.yml (optional)
       - invalid_surfaces.yml  (optional)
-    Includes:
-      - Featured LIMIT demos
-      - Predicate smoke tests synthesized from artifacts
-      - Gold / Multipath / Invalid sections
-
-    Flags:
-      - art_dir: where artifacts & YAML live (default 'out')
-      - *path: override defaults
-      - max_items: optional cap on gold examples (others un-capped)
     """
     art_dir_p = Path(art_dir)
     gold_p = Path(gold_path) if gold_path else (art_dir_p / "gold_surfaces.yml")
@@ -418,7 +411,7 @@ def generate_cli_test(
     invalid_p = Path(invalid_path) if invalid_path else (art_dir_p / "invalid_surfaces.yml")
     out_p = Path(out_path) if out_path else (art_dir_p / "cli_test.sh")
 
-    # Artifacts to pick aliases/table/connectors
+    # Artifacts for featured/preds synthesis
     vocab_p = art_dir_p / "graph_vocabulary.yaml"
     binder_p = art_dir_p / "graph_binder.yaml"
 
@@ -426,7 +419,9 @@ def generate_cli_test(
     binder = _load_yaml_dict(binder_p)
 
     featured = _discover_featured(vocab, binder)
-    preds = _discover_predicate_smoke(vocab, binder)
+
+    include_preds = os.environ.get("CLI_TEST_INCLUDE_PREDS", "1") not in ("0", "false", "False", "")
+    preds = _discover_predicate_smoke(vocab, binder) if include_preds else []
 
     # Gold
     gold_items_raw = _load_yaml_list_any(gold_p)
@@ -468,7 +463,7 @@ def generate_cli_test(
             "nl_q": _bash_single_quote(nl),
         })
 
-    # Load template
+    # Render
     tpl_text = Path(template_path).read_text(encoding="utf-8") if template_path else DEFAULT_TEMPLATE
     rendered = _render(tpl_text, {
         "featured": featured,
@@ -478,24 +473,16 @@ def generate_cli_test(
         "invalid": invalid,
     })
 
-    # Ensure out dir
     out_p.parent.mkdir(parents=True, exist_ok=True)
     out_p.write_text(rendered, encoding="utf-8")
 
     # chmod +x
     mode = out_p.stat().st_mode
     out_p.chmod(mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-
     return out_p
 
 
 def main(argv: Optional[List[str]] = None) -> int:
-    """
-    CLI:
-      python -m vbg_tools.create_cli_test
-      python -m vbg_tools.create_cli_test --max 50
-      python -m vbg_tools.create_cli_test --gold other.yml --multi other_multi.yml --invalid other_invalid.yml --out out/cli_test.sh --tpl my.tpl
-    """
     import argparse
     p = argparse.ArgumentParser(description="Generate a clean cli_test.sh from surface YAMLs and artifacts")
     p.add_argument("--art-dir", default=os.environ.get("ARTIFACTS_DIR", "out"))
