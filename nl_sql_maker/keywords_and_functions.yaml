@@ -130,6 +130,7 @@ keywords:
       FROM: "from"
       OF: "of"
       COMMA: ","
+      NOT: "not"
 # SQL functions and templates
 sql_actions:
   # ---------- Projections (non-PostGIS) ----------
