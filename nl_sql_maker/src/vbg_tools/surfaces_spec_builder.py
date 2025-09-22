@@ -104,15 +104,23 @@ def _normalize_slot_types(st_raw: Any, db_type: str) -> Set[str]:
 def column_slot_types(binder: Dict[str, Any], fqcol: str) -> Set[str]:
     """
     Return normalized abstract slot types for a fully-qualified column name.
-    Robust to junky/serialized 'slot_types' and 'type'.
-    (Signature matches tests: (binder, fqcol))
+
+    FIX: If the column does not exist in binder.catalogs.columns (or the entry
+    is empty / not a dict), return an empty set instead of defaulting to "text".
+    This matches unit-test expectations and avoids spurious predicate generation.
     """
     cats = binder.get("catalogs") or {}
     cols = cats.get("columns") or {}
-    meta = cols.get(fqcol) or {}
+
+    meta = cols.get(fqcol)
+    # Missing or malformed column entry -> no slot types
+    if not meta or not isinstance(meta, dict):
+        return set()
+
     st_raw = meta.get("slot_types")
     db_t   = meta.get("type", "")
     return _normalize_slot_types(st_raw, db_t)
+
 
 
 # =========================
