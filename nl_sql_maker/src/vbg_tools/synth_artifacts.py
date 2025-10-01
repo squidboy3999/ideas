@@ -186,27 +186,167 @@ def _ensure_ordering_functions(functions: dict) -> dict:
     return functions
 
 
+def _normalize_db_type_str(t: str | None) -> str | None:
+    if not t:
+        return None
+    s = str(t).strip()
+    # If someone accidentally passed a dict-as-string, ignore it.
+    if s.startswith("{") and s.endswith("}"):
+        return None
+    return s
+
+
+def _slot_types_from_types_list(types: list[str]) -> list[str]:
+    """
+    Convert a list that may contain DB types (INTEGER, VARCHAR(50), DECIMAL...)
+    or abstract types (numeric, text, date, timestamp, geometry_*) into a
+    deduped set of abstract slot types understood by the runtime.
+    """
+    out: set[str] = set()
+    for raw in (types or []):
+        if not raw:
+            continue
+        s = str(raw).strip()
+        if not s:
+            continue
+        # If it's a dict-as-string (bad), skip
+        if s.startswith("{") and s.endswith("}"):
+            continue
+        lo = s.lower()
+
+        # Already-abstract types pass through
+        if lo in {"any", "numeric", "integer", "float", "boolean", "text", "date", "timestamp",
+                  "geometry", "geography",
+                  "geometry_point", "geometry_linestring", "geometry_polygon",
+                  "geography_point", "geography_linestring", "geography_polygon"}:
+            # Normalize numeric family
+            if lo in {"integer", "float"}:
+                out.add("numeric")
+            else:
+                out.add(lo)
+            continue
+
+        # DB → abstract mapping
+        if any(k in lo for k in ("int", "decimal", "numeric", "real", "double", "money", "number")):
+            out.add("numeric")
+        elif any(k in lo for k in ("char", "text", "varchar", "string", "uuid", "json")):
+            out.add("text")
+        elif "bool" in lo:
+            out.add("boolean")
+        elif lo == "date":
+            out.add("date")
+        elif "timestamp" in lo or "datetime" in lo:
+            out.add("timestamp")
+        elif "polygon" in lo:
+            out.add("geometry_polygon")
+        elif "linestring" in lo or "line_string" in lo:
+            out.add("geometry_linestring")
+        elif "point" in lo:
+            out.add("geometry_point")
+        elif "geometry" in lo:
+            out.add("geometry")
+        elif "geography" in lo:
+            out.add("geography")
+        else:
+            # Unknown → don't invent; leave it out
+            pass
+
+    return sorted(out)
+
+
 def build_binder(schema_yaml: dict, vocabulary: dict) -> dict:
-    # tables & columns
+    """
+    Build binder with normalized tables/columns/functions/connectors.
+    Columns:
+      - name: string (no dict-like)
+      - table: string
+      - type: DB type string or None (clean; no dict-like)
+      - slot_types: list[str] abstract types (numeric/text/date/timestamp/geometry_*)
+    """
     table_rows = collect_table_rows(schema_yaml)
-    column_rows = collect_column_rows(schema_yaml)
+    column_rows = collect_column_rows(schema_yaml)  # now returns clean fqn/table/name/types
 
     tables = {r["n"]: {} for r in table_rows}
-    columns = {}
+    columns: Dict[str, Dict[str, Any]] = {}
+
+    def _normalize_db_type_str(t: str | None) -> str | None:
+        if not t:
+            return None
+        s = str(t).strip()
+        return None if (s.startswith("{") and s.endswith("}")) else s
+
+    def _slot_types_from_list(types: List[str]) -> List[str]:
+        out: set[str] = set()
+        for raw in (types or []):
+            if not raw:
+                continue
+            s = str(raw).strip()
+            if not s or (s.startswith("{") and s.endswith("}")):
+                continue
+            lo = s.lower()
+
+            # Already-abstract
+            if lo in {"any", "numeric", "integer", "float", "boolean", "text", "date", "timestamp",
+                      "geometry", "geography",
+                      "geometry_point", "geometry_linestring", "geometry_polygon",
+                      "geography_point", "geography_linestring", "geography_polygon"}:
+                if lo in {"integer", "float"}:
+                    out.add("numeric")
+                else:
+                    out.add(lo)
+                continue
+
+            # DB → abstract
+            if any(k in lo for k in ("int", "decimal", "numeric", "real", "double", "money", "number")):
+                out.add("numeric")
+            elif any(k in lo for k in ("char", "text", "varchar", "string", "uuid", "json")):
+                out.add("text")
+            elif "bool" in lo:
+                out.add("boolean")
+            elif lo == "date":
+                out.add("date")
+            elif "timestamp" in lo or "datetime" in lo:
+                out.add("timestamp")
+            elif "polygon" in lo:
+                out.add("geometry_polygon")
+            elif "linestring" in lo or "line_string" in lo:
+                out.add("geometry_linestring")
+            elif "point" in lo:
+                out.add("geometry_point")
+            elif "geometry" in lo:
+                out.add("geometry")
+            elif "geography" in lo:
+                out.add("geography")
+        return sorted(out)
+
     for r in column_rows:
-        fqn = r["fqn"]
+        fqn = r["fqn"]                             # guaranteed "table.col"
+        table = r["table"]
+        name = r.get("name") or fqn.split(".", 1)[-1]
+        raw_types: List[str] = r.get("types") or []
+
+        # Choose one clean DB type if present
+        db_type: str | None = None
+        for t in raw_types:
+            tnorm = _normalize_db_type_str(t)
+            if tnorm:
+                db_type = tnorm
+                break
+
+        slot_types = _slot_types_from_list(raw_types)
+
         columns[fqn] = {
-            "name": fqn.split(".")[-1],
-            "table": r["table"],
-            "type": (r.get("types") or [None])[0],
-            "slot_types": r.get("types") or [],
+            "name": name,
+            "table": table,
+            "type": db_type,
+            "slot_types": slot_types,
         }
 
-    # functions: prefer explicit schema.functions; else derive from vocabulary.keywords.sql_actions
-    schema_functions_rows = collect_functions_from_schema(schema_yaml)
-    functions: dict = {}
-    if schema_functions_rows:
-        for r in schema_functions_rows:
+    # functions
+    schema_fns = collect_functions_from_schema(schema_yaml)
+    if schema_fns:
+        functions: Dict[str, Any] = {}
+        for r in schema_fns:
             name = r["name"]
             arity = len({(x.get("arg") or "") for x in (r.get("reqs") or [])})
             functions[name] = {
@@ -217,16 +357,15 @@ def build_binder(schema_yaml: dict, vocabulary: dict) -> dict:
                 "bind_style": r.get("bind_style") or "of",
             }
     else:
-        sql_actions = (vocabulary.get("keywords") or {}).get("sql_actions") or {}
-        functions = _functions_from_actions(sql_actions)
+        # Legacy path from vocabulary
+        actions = (vocabulary.get("keywords") or {}).get("sql_actions") or {}
+        functions = _functions_from_actions(actions)
 
     functions = _ensure_ordering_functions(functions)
 
-    # connectors mirror
-    connectors = (vocabulary.get("keywords") or {}).get("connectors") or {}
-    connectors = ensure_core_connectors(connectors)
+    connectors = ensure_core_connectors(((vocabulary.get("keywords") or {}).get("connectors") or {}))
 
-    binder = {
+    return {
         "catalogs": {
             "tables": tables,
             "columns": columns,
@@ -234,7 +373,6 @@ def build_binder(schema_yaml: dict, vocabulary: dict) -> dict:
             "connectors": connectors,
         }
     }
-    return binder
 
 
 # =========================
